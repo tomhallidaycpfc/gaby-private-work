@@ -69,26 +69,6 @@ export default function Home() {
             📝 Single Log
           </button>
           <button
-            onClick={() => setActiveTab('batch')}
-            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
-              activeTab === 'batch'
-                ? 'bg-indigo-600 text-white shadow'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            📚 Backlog Entry
-          </button>
-          <button
-            onClick={() => setActiveTab('consolidated')}
-            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
-              activeTab === 'consolidated'
-                ? 'bg-indigo-600 text-white shadow'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            📦 Backlog Invoice
-          </button>
-          <button
             onClick={() => setActiveTab('history')}
             className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
               activeTab === 'history'
@@ -107,6 +87,26 @@ export default function Home() {
             }`}
           >
             💰 Monthly Invoice
+          </button>
+          <button
+            onClick={() => setActiveTab('batch')}
+            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
+              activeTab === 'batch'
+                ? 'bg-indigo-600 text-white shadow'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            📚 Backlog Entry
+          </button>
+          <button
+            onClick={() => setActiveTab('consolidated')}
+            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
+              activeTab === 'consolidated'
+                ? 'bg-indigo-600 text-white shadow'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            📦 Backlog Invoice
           </button>
         </div>
 
