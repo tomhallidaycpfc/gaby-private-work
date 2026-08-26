@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { Appointment, Invoice } from '@/types';
 import { getCurrentMonth, formatCurrency, GABY_DETAILS } from '@/lib/utils';
 import LogAppointment from '@/components/LogAppointment';
+import BatchLogAppointments from '@/components/BatchLogAppointments';
 import HistoricalRecords from '@/components/HistoricalRecords';
 import MonthEndInvoicing from '@/components/MonthEndInvoicing';
+import ConsolidatedInvoicing from '@/components/ConsolidatedInvoicing';
 import PinLock from '@/components/PinLock';
 
-type Tab = 'log' | 'history' | 'invoicing';
+type Tab = 'log' | 'batch' | 'consolidated' | 'history' | 'invoicing';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('log');
@@ -55,36 +57,56 @@ export default function Home() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6 bg-white rounded-lg shadow p-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-6 bg-white rounded-lg shadow p-2">
           <button
             onClick={() => setActiveTab('log')}
-            className={`w-full py-3 px-3 rounded-lg font-semibold text-center text-sm sm:text-base transition ${
+            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
               activeTab === 'log'
                 ? 'bg-indigo-600 text-white shadow'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            📝 Log Appointment
+            📝 Single Log
+          </button>
+          <button
+            onClick={() => setActiveTab('batch')}
+            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
+              activeTab === 'batch'
+                ? 'bg-indigo-600 text-white shadow'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            📚 Backlog Entry
+          </button>
+          <button
+            onClick={() => setActiveTab('consolidated')}
+            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
+              activeTab === 'consolidated'
+                ? 'bg-indigo-600 text-white shadow'
+                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            📦 Backlog Invoice
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`w-full py-3 px-3 rounded-lg font-semibold text-center text-sm sm:text-base transition ${
+            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
               activeTab === 'history'
                 ? 'bg-indigo-600 text-white shadow'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            📋 Historical Records
+            📋 Records
           </button>
           <button
             onClick={() => setActiveTab('invoicing')}
-            className={`w-full py-3 px-3 rounded-lg font-semibold text-center text-sm sm:text-base transition ${
+            className={`w-full py-3 px-2 rounded-lg font-semibold text-center text-xs sm:text-sm transition ${
               activeTab === 'invoicing'
                 ? 'bg-indigo-600 text-white shadow'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
-            💰 Month-End Invoicing
+            💰 Monthly Invoice
           </button>
         </div>
 
@@ -99,6 +121,18 @@ export default function Home() {
             {activeTab === 'log' && (
               <LogAppointment
                 onAppointmentSaved={() => loadData()}
+              />
+            )}
+            {activeTab === 'batch' && (
+              <BatchLogAppointments
+                onAppointmentsSaved={() => loadData()}
+              />
+            )}
+            {activeTab === 'consolidated' && (
+              <ConsolidatedInvoicing
+                appointments={appointments}
+                invoices={invoices}
+                onInvoiceGenerated={() => loadData()}
               />
             )}
             {activeTab === 'history' && (
