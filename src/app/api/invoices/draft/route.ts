@@ -65,14 +65,16 @@ Email: gabydeluca.nursing@outlook.com`;
 
     const subjectText = `Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`;
 
-    // Option A: Brevo SMTP / API (Free 300 emails/day to ANY recipient without domain restriction)
+    // Option A: Brevo SMTP / API
     if (brevoApiKey) {
+      const brevoLogin = process.env.BREVO_USER || process.env.BREVO_EMAIL || outlookEmail;
+
       const transporter = nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
         port: 587,
         secure: false,
         auth: {
-          user: outlookEmail,
+          user: brevoLogin,
           pass: brevoApiKey,
         },
       });
