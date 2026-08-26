@@ -90,13 +90,6 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       return updated;
     });
   }
-        patientName: '',
-        startTime: '09:00',
-        endTime: '10:00',
-        cost: 0,
-      },
-    ]);
-  }
 
   function handleRemoveItem(id: string) {
     if (items.length === 1) return;
