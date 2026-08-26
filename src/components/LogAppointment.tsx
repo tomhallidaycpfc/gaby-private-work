@@ -20,6 +20,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   const [selectedConsultant, setSelectedConsultant] = useState('');
   const [selectedAppointmentType, setSelectedAppointmentType] = useState('');
   const [patientName, setPatientName] = useState('');
+  const [patientReference, setPatientReference] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const appointmentTypes =
@@ -41,12 +42,14 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
       return;
     }
 
-    if (selectedConsultant !== 'David Ross' && !patientName.trim()) {
-      alert('Please enter the patient name');
+    if (selectedConsultant !== 'David Ross' && !patientReference.trim() && !patientName.trim()) {
+      alert('Please enter a patient reference or name');
       return;
     }
 
     setSubmitting(true);
+
+    const ref = selectedConsultant === 'David Ross' ? 'N/A' : (patientReference.trim() || patientName.trim());
 
     const appointment: Appointment = {
       date,
@@ -54,7 +57,9 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
       endTime: selectedConsultant === 'David Ross' ? endTime : undefined,
       consultant: selectedConsultant as any,
       appointmentType: selectedAppointmentType,
-      patientInitials: selectedConsultant === 'David Ross' ? 'N/A' : patientName.trim(),
+      patientName: selectedConsultant === 'David Ross' ? 'N/A' : patientName.trim(),
+      patientReference: ref,
+      patientInitials: ref,
       cost,
       invoiced: false,
     };
@@ -75,6 +80,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
         setSelectedConsultant('');
         setSelectedAppointmentType('');
         setPatientName('');
+        setPatientReference('');
         onAppointmentSaved();
       } else {
         alert('Failed to save appointment');
@@ -181,20 +187,34 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
           </div>
         )}
 
-        {/* Patient Name (Hidden for David Ross) */}
+        {/* Patient Name & Reference (Hidden for David Ross) */}
         {selectedConsultant && selectedConsultant !== 'David Ross' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Patient Full Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={patientName}
-              onChange={(e) => setPatientName(e.target.value)}
-              placeholder="e.g., Sarah Smith"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Patient Full Name <span className="text-gray-400 font-normal">(Internal Record Only)</span>
+              </label>
+              <input
+                type="text"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                placeholder="e.g., Sarah Smith"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Patient Reference <span className="text-red-500">*</span> <span className="text-indigo-600 font-normal">(Appears on Invoice)</span>
+              </label>
+              <input
+                type="text"
+                value={patientReference}
+                onChange={(e) => setPatientReference(e.target.value)}
+                placeholder="e.g., Ref #102 or Initials SS"
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
           </div>
         )}
 
