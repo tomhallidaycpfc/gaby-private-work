@@ -130,7 +130,7 @@ export function formatDate(dateString: string): string {
 
 /**
  * Build patient reference string: <Initials><BirthYearDigits> <DateSeen>
- * e.g., "SS84 14/08/2026"
+ * e.g., "TH77 26082026"
  */
 export function buildPatientReference(
   patientName: string,
@@ -151,7 +151,7 @@ export function buildPatientReference(
   if (dateString && dateString.includes('-')) {
     const [y, m, d] = dateString.split('-');
     if (y && m && d) {
-      dateFormatted = `${d}/${m}/${y}`;
+      dateFormatted = `${d}${m}${y}`;
     }
   }
 
