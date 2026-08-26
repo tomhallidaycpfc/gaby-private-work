@@ -341,7 +341,7 @@ export default function ConsolidatedInvoicing({
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto pr-1 divide-y">
             {uninvoicedApts.map((apt) => {
-              const isChecked = selectedAptIds.length === 0 || (apt.id && selectedAptIds.includes(apt.id));
+              const isChecked = selectedAptIds.length === 0 || Boolean(apt.id && selectedAptIds.includes(apt.id));
               return (
                 <label
                   key={apt.id}

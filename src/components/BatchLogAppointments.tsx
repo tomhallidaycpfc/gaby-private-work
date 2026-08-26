@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Appointment } from '@/types';
 import {
   CONSULTANTS,
@@ -244,7 +244,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
             📅 Backlog Breakdown by Month:
           </span>
           <div className="flex flex-wrap gap-3">
-            {Object.entries(monthSummary).map(([mKey, summary]) => {
+            {Object.entries(monthSummary).map(([mKey, summary]: [string, { count: number; total: number }]) => {
               const [y, m] = mKey.split('-');
               const dateObj = new Date(Number(y), Number(m) - 1, 1);
               const monthLabel = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric' }).format(dateObj);
