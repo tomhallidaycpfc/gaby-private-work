@@ -65,7 +65,7 @@ export const CONSULTANT_EMAILS = {
 // Gaby's details
 export const GABY_DETAILS = {
   name: 'Gabriella De Luca',
-  credentials: 'Plastic Surgery Nurse, BSE Hons, Tissue Viability course',
+  credentials: 'Plastic Surgery Nurse, BSE Hons',
   pinNumber: '92C1636E',
   personalEmail: 'gaby.deluca@btinternet.com',
   workEmail: 'gabydeluca.nursing@outlook.com',
@@ -153,7 +153,9 @@ export function getPreviousMonth(): string {
  * Generate invoice number
  */
 export function generateInvoiceNumber(month: string): string {
-  const [year, monthNum] = month.split('-');
+  const parts = month.split('-');
+  const year = parts[0] || '2026';
+  const monthNum = parts[1] || 'ALL';
   const timestamp = Date.now().toString().slice(-3);
   return `INV-${year}-${monthNum}-${timestamp}`;
 }
