@@ -10,8 +10,6 @@ export function appointmentToRow(appointment: Appointment) {
     consultant: appointment.consultant,
     appointment_type: appointment.appointmentType,
     patient_initials: ref,
-    patient_name: appointment.patientName ?? null,
-    patient_reference: ref,
     cost: appointment.cost,
     invoiced: appointment.invoiced ?? false,
     invoice_month: appointment.invoiceMonth ?? null,
