@@ -14,14 +14,14 @@ export default function HistoricalRecords({
   onAppointmentDeleted,
 }: HistoricalRecordsProps) {
   const [filterConsultant, setFilterConsultant] = useState('');
-  const [filterMonth, setFilterMonth] = useState(getCurrentMonth());
+  const [filterMonth, setFilterMonth] = useState('');
   const [expandedConsultant, setExpandedConsultant] = useState<string | null>(null);
 
   // Filter appointments
   const filtered = useMemo(() => {
     return appointments.filter((a) => {
       const matchConsultant = !filterConsultant || a.consultant === filterConsultant;
-      const matchMonth = a.date.startsWith(filterMonth);
+      const matchMonth = !filterMonth || a.date.startsWith(filterMonth);
       return matchConsultant && matchMonth;
     });
   }, [appointments, filterConsultant, filterMonth]);
@@ -96,6 +96,7 @@ export default function HistoricalRecords({
               type="month"
               value={filterMonth}
               onChange={(e) => setFilterMonth(e.target.value)}
+              placeholder="All Months"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
