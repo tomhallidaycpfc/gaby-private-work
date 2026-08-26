@@ -7,6 +7,7 @@ import {
   APPOINTMENT_TYPES,
   calculateAppointmentCost,
   formatCurrency,
+  buildPatientReference,
 } from '@/lib/utils';
 
 interface BatchItem {
@@ -15,7 +16,7 @@ interface BatchItem {
   consultant: string;
   appointmentType: string;
   patientName: string;
-  patientReference: string;
+  birthYearDigits: string;
   startTime: string;
   endTime: string;
   cost: number;
@@ -33,7 +34,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       consultant: '',
       appointmentType: '',
       patientName: '',
-      patientReference: '',
+      birthYearDigits: '',
       startTime: '09:00',
       endTime: '10:00',
       cost: 0,
@@ -49,7 +50,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
         consultant: copyFrom.consultant,
         appointmentType: copyFrom.appointmentType,
         patientName: copyFrom.patientName,
-        patientReference: copyFrom.patientReference,
+        birthYearDigits: copyFrom.birthYearDigits,
         startTime: copyFrom.startTime,
         endTime: copyFrom.endTime,
         cost: copyFrom.cost,
@@ -63,7 +64,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       consultant: lastItem ? lastItem.consultant : '',
       appointmentType: lastItem ? lastItem.appointmentType : '',
       patientName: '',
-      patientReference: '',
+      birthYearDigits: '',
       startTime: '09:00',
       endTime: '10:00',
       cost: lastItem ? lastItem.cost : 0,
@@ -112,7 +113,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           updated.appointmentType = '';
           if (value === 'David Ross') {
             updated.patientName = 'N/A';
-            updated.patientReference = 'N/A';
+            updated.birthYearDigits = 'N/A';
           }
         }
 
@@ -156,8 +157,8 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
         alert(`Row #${i + 1}: Please select both a Consultant and Appointment Type.`);
         return;
       }
-      if (item.consultant !== 'David Ross' && !item.patientReference.trim() && !item.patientName.trim()) {
-        alert(`Row #${i + 1}: Please enter a Patient Reference or Name.`);
+      if (item.consultant !== 'David Ross' && (!item.patientName.trim() || !item.birthYearDigits.trim())) {
+        alert(`Row #${i + 1}: Please enter Patient Name and Birth Year digits.`);
         return;
       }
     }
@@ -166,7 +167,11 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
 
     try {
       const appointmentsToSave: Appointment[] = items.map((item) => {
-        const ref = item.consultant === 'David Ross' ? 'N/A' : (item.patientReference.trim() || item.patientName.trim());
+        const ref =
+          item.consultant === 'David Ross'
+            ? 'N/A'
+            : buildPatientReference(item.patientName, item.birthYearDigits, item.date);
+
         return {
           date: item.date,
           startTime: item.startTime,
@@ -201,7 +206,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           consultant: '',
           appointmentType: '',
           patientName: '',
-          patientReference: '',
+          birthYearDigits: '',
           startTime: '09:00',
           endTime: '10:00',
           cost: 0,
@@ -392,7 +397,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:col-span-1">
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 mb-1">
-                          Patient Name <span className="text-gray-400 font-normal">(Internal)</span>
+                          Patient Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -401,19 +406,21 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
                           onChange={(e) =>
                             handleUpdateItem(item.id, 'patientName', e.target.value)
                           }
+                          required={item.consultant !== 'David Ross'}
                           className="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 mb-1">
-                          Patient Ref <span className="text-red-500">*</span> <span className="text-indigo-600 font-normal">(On Invoice)</span>
+                          Birth Year (2 Digits) <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. Ref 102"
-                          value={item.patientReference}
+                          placeholder="e.g. 84"
+                          maxLength={2}
+                          value={item.birthYearDigits}
                           onChange={(e) =>
-                            handleUpdateItem(item.id, 'patientReference', e.target.value)
+                            handleUpdateItem(item.id, 'birthYearDigits', e.target.value.slice(0, 2))
                           }
                           required={item.consultant !== 'David Ross'}
                           className="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
@@ -423,12 +430,21 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
                   )}
                 </div>
 
-                {/* Subtotal */}
-                {item.cost > 0 && (
-                  <div className="text-right text-xs font-bold text-indigo-700 pt-1">
-                    Row Cost: {formatCurrency(item.cost)}
+                {/* Subtotal & Ref Preview */}
+                <div className="flex justify-between items-center text-xs pt-1">
+                  <div>
+                    {item.consultant && item.consultant !== 'David Ross' && item.patientName && (
+                      <span className="font-mono text-gray-600">
+                        Invoice Ref: <strong className="text-indigo-700">{buildPatientReference(item.patientName, item.birthYearDigits, item.date)}</strong>
+                      </span>
+                    )}
                   </div>
-                )}
+                  {item.cost > 0 && (
+                    <div className="font-bold text-indigo-700">
+                      Row Cost: {formatCurrency(item.cost)}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}

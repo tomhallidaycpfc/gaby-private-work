@@ -7,6 +7,7 @@ import {
   APPOINTMENT_TYPES,
   calculateAppointmentCost,
   formatCurrency,
+  buildPatientReference,
 } from '@/lib/utils';
 
 interface LogAppointmentProps {
@@ -20,7 +21,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   const [selectedConsultant, setSelectedConsultant] = useState('');
   const [selectedAppointmentType, setSelectedAppointmentType] = useState('');
   const [patientName, setPatientName] = useState('');
-  const [patientReference, setPatientReference] = useState('');
+  const [birthYearDigits, setBirthYearDigits] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const appointmentTypes =
@@ -34,6 +35,11 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
     endTime
   );
 
+  const generatedRef =
+    selectedConsultant === 'David Ross'
+      ? 'N/A'
+      : buildPatientReference(patientName, birthYearDigits, date);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -42,14 +48,14 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
       return;
     }
 
-    if (selectedConsultant !== 'David Ross' && !patientReference.trim() && !patientName.trim()) {
-      alert('Please enter a patient reference or name');
+    if (selectedConsultant !== 'David Ross' && (!patientName.trim() || !birthYearDigits.trim())) {
+      alert('Please enter both Patient Full Name and Birth Year digits');
       return;
     }
 
     setSubmitting(true);
 
-    const ref = selectedConsultant === 'David Ross' ? 'N/A' : (patientReference.trim() || patientName.trim());
+    const ref = selectedConsultant === 'David Ross' ? 'N/A' : generatedRef;
 
     const appointment: Appointment = {
       date,
@@ -72,7 +78,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
       });
 
       if (response.ok) {
-        alert(`✅ Appointment logged successfully!\n\nCost: ${formatCurrency(cost)}`);
+        alert(`✅ Appointment logged successfully!\n\nInvoice Ref: ${ref}\nCost: ${formatCurrency(cost)}`);
         // Reset form
         setDate(new Date().toISOString().split('T')[0]);
         setStartTime('09:00');
@@ -80,7 +86,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
         setSelectedConsultant('');
         setSelectedAppointmentType('');
         setPatientName('');
-        setPatientReference('');
+        setBirthYearDigits('');
         onAppointmentSaved();
       } else {
         alert('Failed to save appointment');
@@ -187,34 +193,45 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
           </div>
         )}
 
-        {/* Patient Name & Reference (Hidden for David Ross) */}
+        {/* Patient Name & Birth Year (Hidden for David Ross) */}
         {selectedConsultant && selectedConsultant !== 'David Ross' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Patient Full Name <span className="text-gray-400 font-normal">(Internal Record Only)</span>
-              </label>
-              <input
-                type="text"
-                value={patientName}
-                onChange={(e) => setPatientName(e.target.value)}
-                placeholder="e.g., Sarah Smith"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Patient Full Name <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(Internal Only)</span>
+                </label>
+                <input
+                  type="text"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  placeholder="e.g., Sarah Smith"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Birth Year (Last 2 Digits) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={birthYearDigits}
+                  onChange={(e) => setBirthYearDigits(e.target.value.slice(0, 2))}
+                  placeholder="e.g., 84"
+                  maxLength={2}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Patient Reference <span className="text-red-500">*</span> <span className="text-indigo-600 font-normal">(Appears on Invoice)</span>
-              </label>
-              <input
-                type="text"
-                value={patientReference}
-                onChange={(e) => setPatientReference(e.target.value)}
-                placeholder="e.g., Ref #102 or Initials SS"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
+
+            {generatedRef && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 flex justify-between items-center">
+                <span>Invoice Ref Preview:</span>
+                <span className="font-mono font-bold text-indigo-700">{generatedRef}</span>
+              </div>
+            )}
           </div>
         )}
 
