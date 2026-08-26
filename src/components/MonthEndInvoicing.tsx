@@ -115,7 +115,25 @@ export default function MonthEndInvoicing({
     doc.save(`Invoice_${invoice.invoiceNumber}.pdf`);
   }
 
-  async function handleSendOutlookEmail(invoice: Invoice) {
+  async function handleTogglePaid(invoice: Invoice) {
+    const newStatus = invoice.status === 'paid' ? 'sent' : 'paid';
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        onInvoiceGenerated(); // Refresh invoices list
+      } else {
+        alert('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error toggling payment status:', error);
+      alert('Error updating payment status');
+    }
+  }
     setSendingEmailFor(invoice.invoiceNumber);
     try {
       const response = await fetch('/api/invoices/draft', {
@@ -268,6 +286,54 @@ Email: ${GABY_DETAILS.workEmail}`;
     });
   }
 
+  // Create friendly payment chaser draft
+  function handleCreateChaserDraft(invoice: Invoice) {
+    const subject = `Payment Reminder: Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`;
+
+    const body = `Hi there,
+
+I hope you're well!
+
+This is a gentle reminder regarding invoice ${invoice.invoiceNumber} for services rendered in ${invoice.month}, which was issued on ${formatDate(invoice.issueDate)} and was due on ${formatDate(invoice.dueDate)}.
+
+INVOICE DETAILS:
+───────────────────────────────────────
+Invoice Number: ${invoice.invoiceNumber}
+Amount Outstanding: ${formatCurrency(invoice.totalCost)}
+Due Date: ${formatDate(invoice.dueDate)}
+
+If payment has already been sent, please disregard this note. Otherwise, I would appreciate it if you could arrange payment at your earliest convenience to:
+
+Bank: Metro Bank
+Account Name: Ms Gabriella De Luca
+Account Number: 47050138
+Sort Code: 23-05-80
+Payment Reference: ${invoice.invoiceNumber}
+
+Please let me know if you need another copy of the original PDF invoice re-sent or if you have any questions.
+
+Many thanks for your support!
+
+Warm regards,
+
+Gabriella De Luca
+Plastic Surgery Nurse
+BSE Hons | Tissue Viability Specialist
+NMC Pin: 16I0383E
+Tel: 07713 031388
+Email: gabydeluca.nursing@outlook.com`;
+
+    setEmailDraft({
+      type: 'chaser',
+      consultant: invoice.consultant,
+      consultantEmail: invoice.consultantEmail,
+      month: invoice.month,
+      invoiceNumber: invoice.invoiceNumber,
+      subject,
+      body,
+    });
+  }
+
   // Get invoices for selected month
   const monthInvoices = useMemo(() => {
     return invoices.filter((i) => i.month === selectedMonth);
@@ -350,15 +416,22 @@ Email: ${GABY_DETAILS.workEmail}`;
                   <p className="text-2xl font-bold text-indigo-600">
                     {formatCurrency(invoice.totalCost)}
                   </p>
-                  <span
-                    className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
-                      invoice.status === 'sent'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                  <button
+                    onClick={() => handleTogglePaid(invoice)}
+                    className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold transition shadow-sm ${
+                      invoice.status === 'paid'
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : invoice.status === 'sent'
+                        ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                     }`}
                   >
-                    {invoice.status === 'sent' ? '✓ Sent' : 'Draft'}
-                  </span>
+                    {invoice.status === 'paid'
+                      ? '✓ Paid (Click to unmark)'
+                      : invoice.status === 'sent'
+                      ? '✉️ Sent (Click to mark Paid)'
+                      : '📝 Draft (Click to mark Paid)'}
+                  </button>
                 </div>
               </div>
 
@@ -398,6 +471,12 @@ Email: ${GABY_DETAILS.workEmail}`;
                   {sendingEmailFor === invoice.invoiceNumber
                     ? 'Sending PDF...'
                     : '✉️ Send via Outlook (w/ PDF)'}
+                </button>
+                <button
+                  onClick={() => handleCreateChaserDraft(invoice)}
+                  className="flex-1 min-w-[140px] bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
+                >
+                  🔔 Payment Reminder
                 </button>
               </div>
             </div>
