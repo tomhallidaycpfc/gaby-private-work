@@ -129,6 +129,36 @@ export function formatDate(dateString: string): string {
 }
 
 /**
+ * Build patient reference string: <Initials><BirthYearDigits> <DateSeen>
+ * e.g., "SS84 14/08/2026"
+ */
+export function buildPatientReference(
+  patientName: string,
+  birthYearDigits: string,
+  dateString: string
+): string {
+  if (!patientName.trim()) return '';
+
+  const initials = patientName
+    .trim()
+    .split(/\s+/)
+    .map((word) => word[0]?.toUpperCase() || '')
+    .join('');
+
+  const yearDigits = birthYearDigits.trim();
+
+  let dateFormatted = dateString;
+  if (dateString && dateString.includes('-')) {
+    const [y, m, d] = dateString.split('-');
+    if (y && m && d) {
+      dateFormatted = `${d}/${m}/${y}`;
+    }
+  }
+
+  return `${initials}${yearDigits} ${dateFormatted}`.trim();
+}
+
+/**
  * Get current month in YYYY-MM format
  */
 export function getCurrentMonth(): string {
