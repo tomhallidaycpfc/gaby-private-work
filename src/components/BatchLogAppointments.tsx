@@ -15,6 +15,7 @@ interface BatchItem {
   consultant: string;
   appointmentType: string;
   patientName: string;
+  patientReference: string;
   startTime: string;
   endTime: string;
   cost: number;
@@ -32,6 +33,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       consultant: '',
       appointmentType: '',
       patientName: '',
+      patientReference: '',
       startTime: '09:00',
       endTime: '10:00',
       cost: 0,
@@ -47,6 +49,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
         consultant: copyFrom.consultant,
         appointmentType: copyFrom.appointmentType,
         patientName: copyFrom.patientName,
+        patientReference: copyFrom.patientReference,
         startTime: copyFrom.startTime,
         endTime: copyFrom.endTime,
         cost: copyFrom.cost,
@@ -60,6 +63,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       consultant: lastItem ? lastItem.consultant : '',
       appointmentType: lastItem ? lastItem.appointmentType : '',
       patientName: '',
+      patientReference: '',
       startTime: '09:00',
       endTime: '10:00',
       cost: lastItem ? lastItem.cost : 0,
@@ -108,6 +112,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           updated.appointmentType = '';
           if (value === 'David Ross') {
             updated.patientName = 'N/A';
+            updated.patientReference = 'N/A';
           }
         }
 
@@ -151,8 +156,8 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
         alert(`Row #${i + 1}: Please select both a Consultant and Appointment Type.`);
         return;
       }
-      if (item.consultant !== 'David Ross' && !item.patientName.trim()) {
-        alert(`Row #${i + 1}: Please enter the Patient Full Name.`);
+      if (item.consultant !== 'David Ross' && !item.patientReference.trim() && !item.patientName.trim()) {
+        alert(`Row #${i + 1}: Please enter a Patient Reference or Name.`);
         return;
       }
     }
@@ -160,16 +165,21 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
     setSubmitting(true);
 
     try {
-      const appointmentsToSave: Appointment[] = items.map((item) => ({
-        date: item.date,
-        startTime: item.startTime,
-        endTime: item.consultant === 'David Ross' ? item.endTime : undefined,
-        consultant: item.consultant as any,
-        appointmentType: item.appointmentType,
-        patientInitials: item.consultant === 'David Ross' ? 'N/A' : item.patientName.trim(),
-        cost: item.cost,
-        invoiced: false,
-      }));
+      const appointmentsToSave: Appointment[] = items.map((item) => {
+        const ref = item.consultant === 'David Ross' ? 'N/A' : (item.patientReference.trim() || item.patientName.trim());
+        return {
+          date: item.date,
+          startTime: item.startTime,
+          endTime: item.consultant === 'David Ross' ? item.endTime : undefined,
+          consultant: item.consultant as any,
+          appointmentType: item.appointmentType,
+          patientName: item.consultant === 'David Ross' ? 'N/A' : item.patientName.trim(),
+          patientReference: ref,
+          patientInitials: ref,
+          cost: item.cost,
+          invoiced: false,
+        };
+      });
 
       // Save sequentially or in parallel
       for (const apt of appointmentsToSave) {
@@ -191,6 +201,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           consultant: '',
           appointmentType: '',
           patientName: '',
+          patientReference: '',
           startTime: '09:00',
           endTime: '10:00',
           cost: 0,
@@ -378,20 +389,36 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
                       </div>
                     </div>
                   ) : (
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Patient Full Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Sarah Smith"
-                        value={item.patientName}
-                        onChange={(e) =>
-                          handleUpdateItem(item.id, 'patientName', e.target.value)
-                        }
-                        required={item.consultant !== 'David Ross'}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:col-span-1">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                          Patient Name <span className="text-gray-400 font-normal">(Internal)</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Sarah Smith"
+                          value={item.patientName}
+                          onChange={(e) =>
+                            handleUpdateItem(item.id, 'patientName', e.target.value)
+                          }
+                          className="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                          Patient Ref <span className="text-red-500">*</span> <span className="text-indigo-600 font-normal">(On Invoice)</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Ref 102"
+                          value={item.patientReference}
+                          onChange={(e) =>
+                            handleUpdateItem(item.id, 'patientReference', e.target.value)
+                          }
+                          required={item.consultant !== 'David Ross'}
+                          className="w-full px-2.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
