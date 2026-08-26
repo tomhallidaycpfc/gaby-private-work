@@ -68,16 +68,19 @@ export default function MonthEndInvoicing({
     doc.text(`Issue Date: ${formatDate(invoice.issueDate)}`, 120, 68);
     doc.text(`Due Date: ${formatDate(invoice.dueDate)}`, 120, 74);
 
-    const tableData = invoice.appointments.map((a) => [
-      formatDate(a.date),
-      a.consultant === 'David Ross' || a.patientInitials === 'N/A' ? '-' : a.patientInitials,
-      a.appointmentType,
-      formatCurrency(a.cost),
-    ]);
+    const tableData = invoice.appointments.map((a) => {
+      const ref = a.patientReference || a.patientInitials;
+      return [
+        formatDate(a.date),
+        a.consultant === 'David Ross' || !ref || ref === 'N/A' ? '-' : ref,
+        a.appointmentType,
+        formatCurrency(a.cost),
+      ];
+    });
 
     autoTable(doc, {
       startY: 82,
-      head: [['Date', 'Patient Name', 'Service / Appointment Type', 'Amount']],
+      head: [['Date', 'Patient Ref', 'Service / Appointment Type', 'Amount']],
       body: tableData,
       theme: 'striped',
       headStyles: {
@@ -228,7 +231,8 @@ export default function MonthEndInvoicing({
   function handleCreateEmailDraft(invoice: Invoice) {
     const appointmentsList = invoice.appointments
       .map((a) => {
-        const patientStr = a.patientInitials && a.patientInitials !== 'N/A' ? `${a.patientInitials} | ` : '';
+        const ref = a.patientReference || a.patientInitials;
+        const patientStr = ref && ref !== 'N/A' ? `Ref: ${ref} | ` : '';
         return `  ${formatDate(a.date)} | ${patientStr}${a.appointmentType} | ${formatCurrency(a.cost)}`;
       })
       .join('\n');
@@ -439,18 +443,21 @@ Email: gabydeluca.nursing@outlook.com`;
               </div>
 
               <div className="border-t pt-4 space-y-2 mb-4">
-                {invoice.appointments.map((apt, idx) => (
-                  <div key={idx} className="flex justify-between text-sm">
-                    <span className="text-gray-700">
-                      {formatDate(apt.date)}
-                      {apt.patientInitials && apt.patientInitials !== 'N/A' ? ` • ${apt.patientInitials}` : ''}
-                      {` • ${apt.appointmentType}`}
-                    </span>
-                    <span className="font-semibold text-gray-900">
-                      {formatCurrency(apt.cost)}
-                    </span>
-                  </div>
-                ))}
+                {invoice.appointments.map((apt, idx) => {
+                  const ref = apt.patientReference || apt.patientInitials;
+                  return (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-gray-700">
+                        {formatDate(apt.date)}
+                        {ref && ref !== 'N/A' ? ` • Ref: ${ref}` : ''}
+                        {` • ${apt.appointmentType}`}
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(apt.cost)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -522,16 +529,19 @@ Email: gabydeluca.nursing@outlook.com`;
               </div>
 
               <div className="border-t pt-4">
-                {selectedInvoice.appointments.map((apt, idx) => (
-                  <div key={idx} className="flex justify-between mb-2">
-                    <span>
-                      {formatDate(apt.date)}
-                      {apt.patientInitials && apt.patientInitials !== 'N/A' ? ` - ${apt.patientInitials}` : ''}
-                      {` - ${apt.appointmentType}`}
-                    </span>
-                    <span>{formatCurrency(apt.cost)}</span>
-                  </div>
-                ))}
+                {selectedInvoice.appointments.map((apt, idx) => {
+                  const ref = apt.patientReference || apt.patientInitials;
+                  return (
+                    <div key={idx} className="flex justify-between mb-2">
+                      <span>
+                        {formatDate(apt.date)}
+                        {ref && ref !== 'N/A' ? ` - Ref: ${ref}` : ''}
+                        {` - ${apt.appointmentType}`}
+                      </span>
+                      <span>{formatCurrency(apt.cost)}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="border-t pt-4 flex justify-between font-bold">
