@@ -28,6 +28,7 @@ export default function MonthEndInvoicing({
   const [selectedMonth, setSelectedMonth] = useState(getPreviousMonth());
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [emailDraft, setEmailDraft] = useState<EmailDraft | null>(null);
+  const [confirmSendInvoice, setConfirmSendInvoice] = useState<Invoice | null>(null);
   const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null);
 
@@ -466,7 +467,7 @@ Email: gabydeluca.nursing@outlook.com`;
                   📄 Download PDF
                 </button>
                 <button
-                  onClick={() => handleSendOutlookEmail(invoice)}
+                  onClick={() => setConfirmSendInvoice(invoice)}
                   disabled={sendingEmailFor === invoice.invoiceNumber}
                   className="flex-1 min-w-[160px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
                 >
@@ -610,6 +611,73 @@ Email: gabydeluca.nursing@outlook.com`;
                 className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-semibold py-2 rounded-lg transition"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send Email Confirmation Popup */}
+      {confirmSendInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                ✉️ Confirm Email Dispatch
+              </h3>
+              <button
+                onClick={() => setConfirmSendInvoice(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 space-y-2 text-sm text-gray-800">
+              <div>
+                <span className="text-xs uppercase font-bold text-gray-500 block">Recipient:</span>
+                <span className="font-semibold text-indigo-900">{confirmSendInvoice.consultant}</span>
+                <span className="block text-xs text-gray-600">({confirmSendInvoice.consultantEmail})</span>
+              </div>
+
+              <div>
+                <span className="text-xs uppercase font-bold text-gray-500 block">From Email:</span>
+                <span className="font-medium text-gray-900">gabydeluca.nursing@outlook.com</span>
+              </div>
+
+              <div>
+                <span className="text-xs uppercase font-bold text-gray-500 block">Attachment:</span>
+                <span className="font-mono text-xs bg-white px-2 py-1 rounded border inline-block text-indigo-700 font-semibold">
+                  📎 Invoice_{confirmSendInvoice.invoiceNumber}.pdf
+                </span>
+              </div>
+
+              <div>
+                <span className="text-xs uppercase font-bold text-gray-500 block">Total Invoice Amount:</span>
+                <span className="text-lg font-bold text-indigo-600">{formatCurrency(confirmSendInvoice.totalCost)}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 italic">
+              Clicking "Confirm & Send" will immediately generate the PDF invoice and send it to {confirmSendInvoice.consultantEmail}.
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setConfirmSendInvoice(null)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2.5 rounded-lg transition"
+              >
+                ❌ Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const inv = confirmSendInvoice;
+                  setConfirmSendInvoice(null);
+                  handleSendOutlookEmail(inv);
+                }}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5"
+              >
+                🚀 Confirm & Send
               </button>
             </div>
           </div>
