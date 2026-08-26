@@ -44,16 +44,19 @@ export function generateInvoicePDFBuffer(invoice: Invoice): Buffer {
   doc.text(`Due Date: ${formatDate(invoice.dueDate)}`, 120, 74);
 
   // Table of Services
-  const tableData = invoice.appointments.map((a) => [
-    formatDate(a.date),
-    a.consultant === 'David Ross' || a.patientInitials === 'N/A' ? '-' : a.patientInitials,
-    a.appointmentType,
-    formatCurrency(a.cost),
-  ]);
+  const tableData = invoice.appointments.map((a) => {
+    const ref = a.patientReference || a.patientInitials;
+    return [
+      formatDate(a.date),
+      a.consultant === 'David Ross' || !ref || ref === 'N/A' ? '-' : ref,
+      a.appointmentType,
+      formatCurrency(a.cost),
+    ];
+  });
 
   autoTable(doc, {
     startY: 82,
-    head: [['Date', 'Patient Name', 'Service / Appointment Type', 'Amount']],
+    head: [['Date', 'Patient Ref', 'Service / Appointment Type', 'Amount']],
     body: tableData,
     theme: 'striped',
     headStyles: {

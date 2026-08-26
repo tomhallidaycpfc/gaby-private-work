@@ -1,6 +1,7 @@
 import { Appointment, Invoice } from '@/types';
 
 export function appointmentToRow(appointment: Appointment) {
+  const ref = appointment.patientReference || appointment.patientInitials || 'N/A';
   return {
     id: appointment.id ?? Date.now().toString(),
     date: appointment.date,
@@ -8,7 +9,9 @@ export function appointmentToRow(appointment: Appointment) {
     end_time: appointment.endTime ?? null,
     consultant: appointment.consultant,
     appointment_type: appointment.appointmentType,
-    patient_initials: appointment.patientInitials,
+    patient_initials: ref,
+    patient_name: appointment.patientName ?? null,
+    patient_reference: ref,
     cost: appointment.cost,
     invoiced: appointment.invoiced ?? false,
     invoice_month: appointment.invoiceMonth ?? null,
@@ -18,6 +21,8 @@ export function appointmentToRow(appointment: Appointment) {
 }
 
 export function rowToAppointment(row: Record<string, unknown>): Appointment {
+  const ref = (row.patient_reference as string) || (row.patient_initials as string) || 'N/A';
+  const name = (row.patient_name as string) || '';
   return {
     id: row.id as string,
     date: row.date as string,
@@ -25,7 +30,9 @@ export function rowToAppointment(row: Record<string, unknown>): Appointment {
     endTime: (row.end_time as string | null) ?? undefined,
     consultant: row.consultant as Appointment['consultant'],
     appointmentType: row.appointment_type as string,
-    patientInitials: row.patient_initials as string,
+    patientInitials: ref,
+    patientReference: ref,
+    patientName: name,
     cost: Number(row.cost),
     invoiced: Boolean(row.invoiced),
     invoiceMonth: (row.invoice_month as string | null) ?? undefined,
