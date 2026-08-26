@@ -19,7 +19,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   const [endTime, setEndTime] = useState('10:00');
   const [selectedConsultant, setSelectedConsultant] = useState('');
   const [selectedAppointmentType, setSelectedAppointmentType] = useState('');
-  const [patientInitials, setPatientInitials] = useState('');
+  const [patientName, setPatientName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const appointmentTypes =
@@ -36,8 +36,13 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!selectedConsultant || !selectedAppointmentType || !patientInitials) {
+    if (!selectedConsultant || !selectedAppointmentType) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    if (selectedConsultant !== 'David Ross' && !patientName.trim()) {
+      alert('Please enter the patient name');
       return;
     }
 
@@ -49,7 +54,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
       endTime: selectedConsultant === 'David Ross' ? endTime : undefined,
       consultant: selectedConsultant as any,
       appointmentType: selectedAppointmentType,
-      patientInitials,
+      patientInitials: selectedConsultant === 'David Ross' ? 'N/A' : patientName.trim(),
       cost,
       invoiced: false,
     };
@@ -69,7 +74,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
         setEndTime('10:00');
         setSelectedConsultant('');
         setSelectedAppointmentType('');
-        setPatientInitials('');
+        setPatientName('');
         onAppointmentSaved();
       } else {
         alert('Failed to save appointment');
@@ -176,21 +181,22 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
           </div>
         )}
 
-        {/* Patient Initials */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Patient Initials <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={patientInitials}
-            onChange={(e) => setPatientInitials(e.target.value.toUpperCase())}
-            placeholder="e.g., MJ"
-            maxLength={5}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
-        </div>
+        {/* Patient Name (Hidden for David Ross) */}
+        {selectedConsultant && selectedConsultant !== 'David Ross' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Patient Full Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={patientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              placeholder="e.g., Sarah Smith"
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
+        )}
 
         {/* Cost Summary */}
         {selectedAppointmentType && (

@@ -96,10 +96,10 @@ export default function MonthEndInvoicing({
   // Create email draft
   function handleCreateEmailDraft(invoice: Invoice) {
     const appointmentsList = invoice.appointments
-      .map(
-        (a) =>
-          `  ${formatDate(a.date)} | ${a.patientInitials} | ${a.appointmentType} | ${formatCurrency(a.cost)}`
-      )
+      .map((a) => {
+        const patientStr = a.patientInitials && a.patientInitials !== 'N/A' ? `${a.patientInitials} | ` : '';
+        return `  ${formatDate(a.date)} | ${patientStr}${a.appointmentType} | ${formatCurrency(a.cost)}`;
+      })
       .join('\n');
 
     const subject = `Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gaby De Luca`;
@@ -256,7 +256,9 @@ Email: ${GABY_DETAILS.workEmail}`;
                 {invoice.appointments.map((apt, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span className="text-gray-700">
-                      {formatDate(apt.date)} • {apt.patientInitials} • {apt.appointmentType}
+                      {formatDate(apt.date)}
+                      {apt.patientInitials && apt.patientInitials !== 'N/A' ? ` • ${apt.patientInitials}` : ''}
+                      {` • ${apt.appointmentType}`}
                     </span>
                     <span className="font-semibold text-gray-900">
                       {formatCurrency(apt.cost)}
@@ -322,7 +324,9 @@ Email: ${GABY_DETAILS.workEmail}`;
                 {selectedInvoice.appointments.map((apt, idx) => (
                   <div key={idx} className="flex justify-between mb-2">
                     <span>
-                      {formatDate(apt.date)} - {apt.patientInitials} - {apt.appointmentType}
+                      {formatDate(apt.date)}
+                      {apt.patientInitials && apt.patientInitials !== 'N/A' ? ` - ${apt.patientInitials}` : ''}
+                      {` - ${apt.appointmentType}`}
                     </span>
                     <span>{formatCurrency(apt.cost)}</span>
                   </div>
