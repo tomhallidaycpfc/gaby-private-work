@@ -134,6 +134,8 @@ export default function MonthEndInvoicing({
       alert('Error updating payment status');
     }
   }
+
+  async function handleSendOutlookEmail(invoice: Invoice) {
     setSendingEmailFor(invoice.invoiceNumber);
     try {
       const response = await fetch('/api/invoices/draft', {
