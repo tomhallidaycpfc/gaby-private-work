@@ -6,6 +6,7 @@ import { getCurrentMonth, formatCurrency, GABY_DETAILS } from '@/lib/utils';
 import LogAppointment from '@/components/LogAppointment';
 import HistoricalRecords from '@/components/HistoricalRecords';
 import MonthEndInvoicing from '@/components/MonthEndInvoicing';
+import PinLock from '@/components/PinLock';
 
 type Tab = 'log' | 'history' | 'invoicing';
 
@@ -41,8 +42,9 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto max-w-6xl px-4 py-8">
+    <PinLock>
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
         {/* Header */}
         <div className="mb-6 text-center sm:text-left">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">Gaby's Work Tracker</h1>
@@ -116,5 +118,6 @@ export default function Home() {
         )}
       </div>
     </main>
+    </PinLock>
   );
 }
