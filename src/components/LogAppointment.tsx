@@ -88,8 +88,8 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900">Log Work Appointment</h2>
+    <div className="bg-white rounded-lg shadow-lg p-4 sm:p-8 max-w-2xl mx-auto">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-900">Log Work Appointment</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Date */}

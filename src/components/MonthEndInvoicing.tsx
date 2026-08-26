@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Appointment, Invoice, EmailDraft } from '@/types';
 import {
   CONSULTANT_EMAILS,
@@ -27,6 +29,114 @@ export default function MonthEndInvoicing({
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [emailDraft, setEmailDraft] = useState<EmailDraft | null>(null);
   const [generatingInvoices, setGeneratingInvoices] = useState(false);
+  const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null);
+
+  function downloadPDF(invoice: Invoice) {
+    const doc = new jsPDF();
+
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 138);
+    doc.text('INVOICE', 14, 20);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(50, 50, 50);
+    doc.text(GABY_DETAILS.name, 196, 20, { align: 'right' });
+    doc.text(GABY_DETAILS.credentials, 196, 25, { align: 'right' });
+    doc.text(`Pin: ${GABY_DETAILS.pinNumber}`, 196, 30, { align: 'right' });
+    doc.text(`Tel: ${GABY_DETAILS.phone}`, 196, 35, { align: 'right' });
+    doc.text(`Email: ${GABY_DETAILS.workEmail}`, 196, 40, { align: 'right' });
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, 45, 196, 45);
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BILL TO:', 14, 55);
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.consultant, 14, 62);
+    doc.text(invoice.consultantEmail, 14, 68);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE DETAILS:', 120, 55);
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Invoice No: ${invoice.invoiceNumber}`, 120, 62);
+    doc.text(`Issue Date: ${formatDate(invoice.issueDate)}`, 120, 68);
+    doc.text(`Due Date: ${formatDate(invoice.dueDate)}`, 120, 74);
+
+    const tableData = invoice.appointments.map((a) => [
+      formatDate(a.date),
+      a.consultant === 'David Ross' || a.patientInitials === 'N/A' ? '-' : a.patientInitials,
+      a.appointmentType,
+      formatCurrency(a.cost),
+    ]);
+
+    autoTable(doc, {
+      startY: 82,
+      head: [['Date', 'Patient Name', 'Service / Appointment Type', 'Amount']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [30, 58, 138],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 35, halign: 'right' },
+      },
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTAL DUE: ${formatCurrency(invoice.totalCost)}`, 196, finalY, { align: 'right' });
+
+    const boxY = finalY + 15;
+    doc.setFillColor(243, 244, 246);
+    doc.rect(14, boxY, 182, 35, 'F');
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAYMENT DETAILS', 20, boxY + 8);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Bank: ${GABY_DETAILS.bank.name}`, 20, boxY + 15);
+    doc.text(`Account Name: Ms Gabriella De Luca`, 20, boxY + 21);
+    doc.text(`Account No: ${GABY_DETAILS.bank.accountNumber}    |    Sort Code: ${GABY_DETAILS.bank.sortCode}`, 20, boxY + 27);
+    doc.text(`Payment Reference: ${invoice.invoiceNumber}`, 20, boxY + 33);
+
+    doc.save(`Invoice_${invoice.invoiceNumber}.pdf`);
+  }
+
+  async function handleSendOutlookEmail(invoice: Invoice) {
+    setSendingEmailFor(invoice.invoiceNumber);
+    try {
+      const response = await fetch('/api/invoices/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(invoice),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`✅ ${data.message}`);
+      } else {
+        alert(`⚠️ ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending Outlook email:', error);
+      alert('Failed to send email via Outlook.');
+    } finally {
+      setSendingEmailFor(null);
+    }
+  }
 
   // Get appointments for the selected month
   const monthAppointments = useMemo(() => {
@@ -267,18 +377,27 @@ Email: ${GABY_DETAILS.workEmail}`;
                 ))}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedInvoice(invoice)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition"
+                  className="flex-1 min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
                 >
                   👁️ View Invoice
                 </button>
                 <button
-                  onClick={() => handleCreateEmailDraft(invoice)}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-lg transition"
+                  onClick={() => downloadPDF(invoice)}
+                  className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
                 >
-                  ✉️ Create Email Draft
+                  📄 Download PDF
+                </button>
+                <button
+                  onClick={() => handleSendOutlookEmail(invoice)}
+                  disabled={sendingEmailFor === invoice.invoiceNumber}
+                  className="flex-1 min-w-[160px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
+                >
+                  {sendingEmailFor === invoice.invoiceNumber
+                    ? 'Sending PDF...'
+                    : '✉️ Send via Outlook (w/ PDF)'}
                 </button>
               </div>
             </div>
