@@ -44,21 +44,21 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto max-w-6xl px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Gaby's Work Tracker</h1>
-          <p className="text-gray-600">
+        <div className="mb-6 text-center sm:text-left">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-1">Gaby's Work Tracker</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             {GABY_DETAILS.name} • {GABY_DETAILS.credentials}
           </p>
-          <p className="text-sm text-gray-500">Pin: {GABY_DETAILS.pinNumber}</p>
+          <p className="text-xs sm:text-sm text-gray-500">Pin: {GABY_DETAILS.pinNumber}</p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-2 mb-8 bg-white rounded-lg shadow p-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-6 bg-white rounded-lg shadow p-2">
           <button
             onClick={() => setActiveTab('log')}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition ${
+            className={`w-full py-3 px-3 rounded-lg font-semibold text-center text-sm sm:text-base transition ${
               activeTab === 'log'
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-indigo-600 text-white shadow'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
@@ -66,9 +66,9 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition ${
+            className={`w-full py-3 px-3 rounded-lg font-semibold text-center text-sm sm:text-base transition ${
               activeTab === 'history'
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-indigo-600 text-white shadow'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
@@ -76,9 +76,9 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveTab('invoicing')}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition ${
+            className={`w-full py-3 px-3 rounded-lg font-semibold text-center text-sm sm:text-base transition ${
               activeTab === 'invoicing'
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-indigo-600 text-white shadow'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
             }`}
           >
