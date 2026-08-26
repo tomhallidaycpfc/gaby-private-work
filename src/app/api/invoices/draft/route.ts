@@ -65,34 +65,46 @@ Email: gabydeluca.nursing@outlook.com`;
 
     const subjectText = `Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`;
 
-    // Option A: Brevo SMTP / API
+    // Option A: Brevo REST API (Bypasses SMTP IP authorization restrictions)
     if (brevoApiKey) {
-      const brevoLogin = process.env.BREVO_USER || process.env.BREVO_EMAIL || outlookEmail;
-
-      const transporter = nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: brevoLogin,
-          pass: brevoApiKey,
+      const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoApiKey,
+          'content-type': 'application/json',
         },
+        body: JSON.stringify({
+          sender: {
+            name: 'Gabriella De Luca',
+            email: outlookEmail,
+          },
+          to: [
+            {
+              email: invoice.consultantEmail,
+              name: invoice.consultant,
+            },
+          ],
+          replyTo: {
+            email: outlookEmail,
+            name: 'Gabriella De Luca',
+          },
+          subject: subjectText,
+          textContent: bodyText,
+          attachment: [
+            {
+              name: `Invoice_${invoice.invoiceNumber}.pdf`,
+              content: pdfBuffer.toString('base64'),
+            },
+          ],
+        }),
       });
 
-      await transporter.sendMail({
-        from: `Gabriella De Luca <${outlookEmail}>`,
-        to: invoice.consultantEmail,
-        replyTo: outlookEmail,
-        subject: subjectText,
-        text: bodyText,
-        attachments: [
-          {
-            filename: `Invoice_${invoice.invoiceNumber}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-          },
-        ],
-      });
+      const brevoData = await brevoRes.json();
+
+      if (!brevoRes.ok) {
+        throw new Error(brevoData.message || brevoData.error || 'Brevo API Error');
+      }
 
       return NextResponse.json({
         success: true,
