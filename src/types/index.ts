@@ -6,7 +6,9 @@ export interface Appointment {
   endTime?: string; // HH:mm format (optional, only for David Ross)
   consultant: 'Victoria Rose' | 'Paul Roblin' | 'Maleeha Mughal' | 'Helen McEvoy' | 'David Ross';
   appointmentType: string; // e.g., "Initial Post Operative Review", "NPWT Dressing Change", etc.
-  patientInitials: string; // e.g., "MJ"
+  patientName?: string; // Internal record only (e.g. "Sarah Smith"), NOT on invoice
+  patientReference?: string; // Patient reference (e.g. "Ref 102" or initials), DOES appear on invoice
+  patientInitials: string; // For backwards compatibility
   cost: number; // Calculated cost in £
   invoiced?: boolean; // Has this been invoiced?
   invoiceMonth?: string; // YYYY-MM format
