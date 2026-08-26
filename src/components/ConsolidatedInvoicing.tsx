@@ -5,6 +5,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Appointment, Invoice } from '@/types';
 import {
+  CONSULTANTS,
   CONSULTANT_EMAILS,
   GABY_DETAILS,
   formatCurrency,
@@ -280,7 +281,7 @@ export default function ConsolidatedInvoicing({
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500"
             >
-              {['Victoria Rose', 'Paul Roblin', 'Maleeha Mughal', 'Helen McEvoy', 'David Ross'].map(
+              {CONSULTANTS.map(
                 (c) => (
                   <option key={c} value={c}>
                     {c}
