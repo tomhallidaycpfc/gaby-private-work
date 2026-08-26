@@ -53,7 +53,11 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json(rowToAppointment(data), { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error creating appointment:', error);
+    return NextResponse.json(
+      { error: error?.message || 'Failed to create appointment' },
+      { status: 500 }
+    );
   }
 }
