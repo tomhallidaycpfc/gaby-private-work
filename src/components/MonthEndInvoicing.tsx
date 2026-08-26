@@ -227,6 +227,26 @@ export default function MonthEndInvoicing({
     }
   }
 
+  async function handleDeleteInvoice(invoice: Invoice) {
+    if (!invoice.id || !confirm(`Delete invoice ${invoice.invoiceNumber}? This will unmark its appointments so they can be re-invoiced.`)) return;
+
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        alert('🗑️ Invoice deleted successfully!');
+        onInvoiceGenerated();
+      } else {
+        alert('Failed to delete invoice');
+      }
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      alert('Error deleting invoice');
+    }
+  }
+
   // Create email draft
   function handleCreateEmailDraft(invoice: Invoice) {
     const appointmentsList = invoice.appointments
@@ -487,6 +507,13 @@ Email: gabydeluca.nursing@outlook.com`;
                   className="flex-1 min-w-[140px] bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
                 >
                   🔔 Payment Reminder
+                </button>
+                <button
+                  onClick={() => handleDeleteInvoice(invoice)}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 px-3 rounded-lg transition text-sm"
+                  title="Delete Invoice"
+                >
+                  🗑️ Delete
                 </button>
               </div>
             </div>

@@ -255,6 +255,26 @@ export default function ConsolidatedInvoicing({
     }
   }
 
+  async function handleDeleteInvoice(invoice: Invoice) {
+    if (!invoice.id || !confirm(`Delete invoice ${invoice.invoiceNumber}? This will unmark its appointments so they can be re-invoiced.`)) return;
+
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        alert('🗑️ Invoice deleted successfully!');
+        onInvoiceGenerated();
+      } else {
+        alert('Failed to delete invoice');
+      }
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      alert('Error deleting invoice');
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header & Consultant Filter */}
@@ -479,6 +499,13 @@ export default function ConsolidatedInvoicing({
                   className="flex-1 min-w-[160px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-xs"
                 >
                   {sendingEmailFor === inv.invoiceNumber ? 'Sending...' : '✉️ Send via Outlook'}
+                </button>
+                <button
+                  onClick={() => handleDeleteInvoice(inv)}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 px-3 rounded-lg transition text-xs"
+                  title="Delete Invoice"
+                >
+                  🗑️ Delete
                 </button>
               </div>
             </div>
