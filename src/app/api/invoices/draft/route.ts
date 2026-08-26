@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
     const outlookEmail = process.env.OUTLOOK_EMAIL || 'gabydeluca.nursing@outlook.com';
     const outlookPassword = process.env.OUTLOOK_APP_PASSWORD;
     const resendApiKey = process.env.RESEND_API_KEY;
+    const brevoApiKey = process.env.BREVO_API_KEY || process.env.BREVO_KEY;
 
     // 1. Generate PDF Buffer
     const pdfBuffer = generateInvoicePDFBuffer(invoice);
@@ -64,7 +65,40 @@ Email: gabydeluca.nursing@outlook.com`;
 
     const subjectText = `Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`;
 
-    // 3. Option A: Use Resend API if RESEND_API_KEY is configured (Bypasses Outlook SMTP restrictions)
+    // Option A: Brevo SMTP / API (Free 300 emails/day to ANY recipient without domain restriction)
+    if (brevoApiKey) {
+      const transporter = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: outlookEmail,
+          pass: brevoApiKey,
+        },
+      });
+
+      await transporter.sendMail({
+        from: `Gabriella De Luca <${outlookEmail}>`,
+        to: invoice.consultantEmail,
+        replyTo: outlookEmail,
+        subject: subjectText,
+        text: bodyText,
+        attachments: [
+          {
+            filename: `Invoice_${invoice.invoiceNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ],
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Invoice email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
+      });
+    }
+
+    // Option B: Use Resend API
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
 
