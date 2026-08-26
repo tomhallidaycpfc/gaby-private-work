@@ -168,13 +168,18 @@ export default function HistoricalRecords({
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 uppercase font-semibold">
-                            Patient Name
+                            Patient Info
                           </p>
-                          <p className="font-semibold text-gray-900">
-                            {appointment.consultant === 'David Ross' || appointment.patientInitials === 'N/A'
+                          <p className="font-semibold text-gray-900 text-sm">
+                            {appointment.consultant === 'David Ross'
                               ? '-'
-                              : appointment.patientInitials}
+                              : (appointment.patientName || '-')}
                           </p>
+                          {appointment.consultant !== 'David Ross' && (appointment.patientReference || appointment.patientInitials) && (
+                            <p className="text-xs text-indigo-600 font-mono">
+                              Ref: {appointment.patientReference || appointment.patientInitials}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 uppercase font-semibold">
