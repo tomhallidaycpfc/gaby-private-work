@@ -38,6 +38,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       birthYearDigits: '',
       startTime: '09:00',
       endTime: '10:00',
+      lunchBreakMinutes: 0,
       cost: 0,
     },
   ]);
@@ -214,6 +215,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           birthYearDigits: '',
           startTime: '09:00',
           endTime: '10:00',
+          lunchBreakMinutes: 0,
           cost: 0,
         },
       ]);
