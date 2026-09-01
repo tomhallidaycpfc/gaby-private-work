@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/invoices/[id]/route": "/api/invoices/[id]",
+  "/api/invoices/draft/route": "/api/invoices/draft",
+  "/api/invoices/route": "/api/invoices",
+  "/api/sessions/[id]/route": "/api/sessions/[id]",
+  "/api/sessions/route": "/api/sessions",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/"
+}

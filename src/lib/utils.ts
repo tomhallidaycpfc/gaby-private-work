@@ -96,7 +96,8 @@ export function calculateAppointmentCost(
   consultant: string,
   appointmentType: string,
   startTime?: string,
-  endTime?: string
+  endTime?: string,
+  lunchBreakMinutes: number = 0
 ): number {
   if (consultant === 'David Ross' && startTime && endTime) {
     // Calculate hours for David Ross
@@ -109,7 +110,10 @@ export function calculateAppointmentCost(
     let duration = (endMinutes - startMinutes) / 60;
     if (duration < 0) duration += 24; // Handle overnight
 
-    return Math.round(duration * 32 * 100) / 100; // £32/hour
+    // Subtract lunch break from duration
+    const invoiceableHours = duration - lunchBreakMinutes / 60;
+
+    return Math.round(Math.max(0, invoiceableHours) * 32 * 100) / 100; // £32/hour
   }
 
   // For other consultants, find the fixed price

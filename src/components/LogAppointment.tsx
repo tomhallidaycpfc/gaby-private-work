@@ -18,6 +18,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
+  const [lunchBreakMinutes, setLunchBreakMinutes] = useState(0);
   const [selectedConsultant, setSelectedConsultant] = useState('');
   const [selectedAppointmentType, setSelectedAppointmentType] = useState('');
   const [patientName, setPatientName] = useState('');
@@ -32,7 +33,8 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
     selectedConsultant,
     selectedAppointmentType,
     startTime,
-    endTime
+    endTime,
+    lunchBreakMinutes
   );
 
   const generatedRef =
@@ -61,6 +63,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
       date,
       startTime,
       endTime: selectedConsultant === 'David Ross' ? endTime : undefined,
+      lunchBreakMinutes: selectedConsultant === 'David Ross' ? lunchBreakMinutes : undefined,
       consultant: selectedConsultant as any,
       appointmentType: selectedAppointmentType,
       patientName: selectedConsultant === 'David Ross' ? 'N/A' : patientName.trim(),
@@ -83,6 +86,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
         setDate(new Date().toISOString().split('T')[0]);
         setStartTime('09:00');
         setEndTime('10:00');
+        setLunchBreakMinutes(0);
         setSelectedConsultant('');
         setSelectedAppointmentType('');
         setPatientName('');
@@ -179,18 +183,36 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
 
         {/* End Time (for David Ross only) */}
         {selectedConsultant === 'David Ross' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              End Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-          </div>
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                End Time <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Lunch Break (minutes)
+              </label>
+              <input
+                type="number"
+                value={lunchBreakMinutes}
+                onChange={(e) => setLunchBreakMinutes(Math.max(0, Number(e.target.value)))}
+                min="0"
+                max="480"
+                placeholder="e.g., 60 for 1 hour"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">This will be deducted from invoiced hours</p>
+            </div>
+          </>
         )}
 
         {/* Patient Name & Birth Year (Hidden for David Ross) */}
@@ -245,9 +267,13 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
               </span>
             </div>
             {selectedConsultant === 'David Ross' && (
-              <p className="text-sm text-gray-600 mt-2">
-                Calculated: {startTime} - {endTime} @ £32/hour
-              </p>
+              <div className="text-sm text-gray-600 mt-2 space-y-1">
+                <p>
+                  Hours: {startTime} - {endTime}
+                  {lunchBreakMinutes > 0 && ` (minus ${lunchBreakMinutes}min lunch)`}
+                  @ £32/hour
+                </p>
+              </div>
             )}
           </div>
         )}
