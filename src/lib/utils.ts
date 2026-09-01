@@ -11,7 +11,7 @@ export const CONSULTANTS = [
 
 export const APPOINTMENT_TYPES = {
   'Victoria Rose': [
-    { name: 'Initial Post Operative Review (drain removal/ROS)', price: 55 },
+    { name: 'Initial Post Operative Review', price: 55 },
     { name: 'Subsequent Follow Up OPAs', price: 55 },
     { name: 'NPWT Dressing Change (VAC)', price: 80 },
     { name: 'Ward Review', price: 35 },
@@ -21,7 +21,7 @@ export const APPOINTMENT_TYPES = {
     { name: 'Routine Post operative Review & Follow Up Dressing Change (Domiciliary)', price: 80 },
   ],
   'Paul Roblin': [
-    { name: 'Initial Post Operative Review (drain removal/ROS)', price: 55 },
+    { name: 'Initial Post Operative Review', price: 55 },
     { name: 'Subsequent Follow Up OPAs', price: 55 },
     { name: 'NPWT Dressing Change (VAC)', price: 80 },
     { name: 'Ward Review', price: 35 },
@@ -31,7 +31,7 @@ export const APPOINTMENT_TYPES = {
     { name: 'Routine Post operative Review & Follow Up Dressing Change (Domiciliary)', price: 80 },
   ],
   'Maleeha Mughal': [
-    { name: 'Initial Post Operative Review (drain removal/ROS)', price: 55 },
+    { name: 'Initial Post Operative Review', price: 55 },
     { name: 'Subsequent Follow Up OPAs', price: 55 },
     { name: 'NPWT Dressing Change (VAC)', price: 80 },
     { name: 'Ward Review', price: 35 },
@@ -41,7 +41,7 @@ export const APPOINTMENT_TYPES = {
     { name: 'Routine Post operative Review & Follow Up Dressing Change (Domiciliary)', price: 80 },
   ],
   'Helen McEvoy': [
-    { name: 'Initial Post Operative Review (drain removal/ROS)', price: 55 },
+    { name: 'Initial Post Operative Review', price: 55 },
     { name: 'Subsequent Follow Up OPAs', price: 55 },
     { name: 'NPWT Dressing Change (VAC)', price: 80 },
     { name: 'Ward Review', price: 35 },
@@ -54,7 +54,7 @@ export const APPOINTMENT_TYPES = {
     { name: 'Hourly Rate (£32/hour)', price: 32 }, // Special: calculated from hours
   ],
   'Gaby De Luca': [
-    { name: 'Initial Post Operative Review (drain removal/ROS)', price: 55 },
+    { name: 'Initial Post Operative Review', price: 55 },
     { name: 'Subsequent Follow Up OPAs', price: 55 },
     { name: 'NPWT Dressing Change (VAC)', price: 80 },
     { name: 'Ward Review', price: 35 },
