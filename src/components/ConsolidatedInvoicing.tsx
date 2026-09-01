@@ -70,6 +70,23 @@ export default function ConsolidatedInvoicing({
     );
   }
 
+  async function handleDeleteAppointment(id: string | undefined) {
+    if (!id || !confirm('Delete this appointment?')) return;
+
+    try {
+      const response = await fetch(`/api/sessions/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        onInvoiceGenerated();
+      }
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      alert('Failed to delete appointment');
+    }
+  }
+
   async function handleGenerateConsolidatedInvoice() {
     if (selectedApts.length === 0) {
       alert('Please select at least one appointment to include in the consolidated invoice.');
@@ -367,15 +384,15 @@ export default function ConsolidatedInvoicing({
             {uninvoicedApts.map((apt) => {
               const isChecked = selectedAptIds.length === 0 || Boolean(apt.id && selectedAptIds.includes(apt.id));
               return (
-                <label
+                <div
                   key={apt.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition cursor-pointer ${
+                  className={`flex items-center justify-between p-3 rounded-lg border transition ${
                     isChecked
                       ? 'bg-indigo-50/60 border-indigo-200'
                       : 'bg-white border-gray-200 opacity-60'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-3 flex-1 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isChecked}
@@ -393,12 +410,21 @@ export default function ConsolidatedInvoicing({
                         • {apt.appointmentType}
                       </span>
                     </div>
-                  </div>
+                  </label>
 
-                  <span className="font-bold text-sm text-indigo-700">
-                    {formatCurrency(apt.cost)}
-                  </span>
-                </label>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-sm text-indigo-700">
+                      {formatCurrency(apt.cost)}
+                    </span>
+                    <button
+                      onClick={() => handleDeleteAppointment(apt.id)}
+                      className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded text-xs font-medium transition"
+                      title="Delete this appointment"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>
