@@ -180,10 +180,20 @@ export default function ConsolidatedInvoicing({
 
     const tableData = invoice.appointments.map((a) => {
       const ref = a.patientReference || a.patientInitials;
+      let details = a.appointmentType;
+      
+      // For David Ross, add hours and lunch break info
+      if (a.consultant === 'David Ross' && a.startTime && a.endTime) {
+        const lunchText = a.lunchBreakMinutes && a.lunchBreakMinutes > 0 
+          ? ` (${a.startTime}-${a.endTime}, -${a.lunchBreakMinutes}min lunch)`
+          : ` (${a.startTime}-${a.endTime})`;
+        details += lunchText;
+      }
+      
       return [
         formatDate(a.date),
         a.consultant === 'David Ross' || !ref || ref === 'N/A' ? '-' : ref,
-        a.appointmentType,
+        details,
         formatCurrency(a.cost),
       ];
     });
@@ -404,10 +414,17 @@ export default function ConsolidatedInvoicing({
                         {formatDate(apt.date)}
                       </span>
                       <span className="text-xs text-gray-500 ml-2">
-                        {apt.patientReference || (apt.patientInitials && apt.patientInitials !== 'N/A')
-                          ? `• Ref: ${apt.patientReference || apt.patientInitials} `
+                        {selectedConsultant === 'David Ross' && apt.startTime && apt.endTime
+                          ? `${apt.startTime}-${apt.endTime}`
+                          : apt.patientReference || (apt.patientInitials && apt.patientInitials !== 'N/A')
+                          ? `Ref: ${apt.patientReference || apt.patientInitials}`
                           : ''}
-                        • {apt.appointmentType}
+                        {selectedConsultant === 'David Ross' && apt.lunchBreakMinutes && apt.lunchBreakMinutes > 0
+                          ? ` (${apt.lunchBreakMinutes}min lunch)`
+                          : ''}
+                      </span>
+                      <span className="text-xs text-gray-600 block">
+                        {apt.appointmentType}
                       </span>
                     </div>
                   </label>
