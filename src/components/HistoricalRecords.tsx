@@ -166,6 +166,11 @@ export default function HistoricalRecords({
                             {appointment.startTime}
                             {appointment.endTime && ` - ${appointment.endTime}`}
                           </p>
+                          {appointment.consultant === 'David Ross' && appointment.lunchBreakMinutes && appointment.lunchBreakMinutes > 0 && (
+                            <p className="text-xs text-orange-600 font-medium">
+                              Lunch: {appointment.lunchBreakMinutes}min
+                            </p>
+                          )}
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 uppercase font-semibold">

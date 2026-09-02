@@ -19,6 +19,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
+  const [lunchBreakMinutes, setLunchBreakMinutes] = useState(0);
   const [selectedConsultant, setSelectedConsultant] = useState('');
   const [selectedAppointmentType, setSelectedAppointmentType] = useState('');
   const [patientName, setPatientName] = useState('');
@@ -35,7 +36,8 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
     selectedConsultant,
     selectedAppointmentType,
     startTime,
-    endTime
+    endTime,
+    lunchBreakMinutes
   );
 
   const generatedRef =
@@ -64,6 +66,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
       date,
       startTime,
       endTime: selectedConsultant === 'David Ross' && !isRetainer ? endTime : undefined,
+      lunchBreakMinutes: selectedConsultant === 'David Ross' && !isRetainer ? lunchBreakMinutes : undefined,
       consultant: selectedConsultant as any,
       appointmentType: selectedAppointmentType,
       patientName: selectedConsultant === 'David Ross' ? 'N/A' : patientName.trim(),
@@ -86,6 +89,7 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
         setDate(new Date().toISOString().split('T')[0]);
         setStartTime('09:00');
         setEndTime('10:00');
+        setLunchBreakMinutes(0);
         setSelectedConsultant('');
         setSelectedAppointmentType('');
         setPatientName('');

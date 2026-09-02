@@ -100,7 +100,8 @@ export function calculateAppointmentCost(
   consultant: string,
   appointmentType: string,
   startTime?: string,
-  endTime?: string
+  endTime?: string,
+  lunchBreakMinutes: number = 0
 ): number {
   if (consultant === 'David Ross' && appointmentType === RETAINER_APPOINTMENT_TYPE) {
     return 50; // Flat retainer fee, no time required
@@ -116,7 +117,8 @@ export function calculateAppointmentCost(
     let duration = (endMinutes - startMinutes) / 60;
     if (duration < 0) duration += 24;
 
-    return Math.round(Math.max(0, duration) * 32 * 100) / 100; // £32/hour
+    const invoiceableHours = Math.max(0, duration - lunchBreakMinutes / 60);
+    return Math.round(invoiceableHours * 32 * 100) / 100; // £32/hour
   }
 
   // For other consultants, find the fixed price
