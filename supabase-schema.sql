@@ -3,7 +3,6 @@ create table if not exists public.appointments (
   date date not null,
   start_time text not null,
   end_time text,
-  lunch_break_minutes integer default 0,
   consultant text not null,
   appointment_type text not null,
   patient_initials text not null,

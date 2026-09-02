@@ -2,12 +2,12 @@ import { Appointment, Invoice } from '@/types';
 
 export function appointmentToRow(appointment: Appointment) {
   const ref = appointment.patientReference || appointment.patientInitials || 'N/A';
-  return {
+
+  const row: Record<string, string | number | boolean | null | undefined> = {
     id: appointment.id ?? Date.now().toString(),
     date: appointment.date,
     start_time: appointment.startTime,
     end_time: appointment.endTime ?? null,
-    lunch_break_minutes: appointment.lunchBreakMinutes ?? 0,
     consultant: appointment.consultant,
     appointment_type: appointment.appointmentType,
     patient_initials: ref,
@@ -17,17 +17,20 @@ export function appointmentToRow(appointment: Appointment) {
     created_at: appointment.createdAt,
     updated_at: appointment.updatedAt,
   };
+
+  return row;
 }
 
 export function rowToAppointment(row: Record<string, unknown>): Appointment {
-  const ref = (row.patient_reference as string) || (row.patient_initials as string) || 'N/A';
+  const ref = (row.patient_initials as string) || (row.patient_reference as string) || 'N/A';
   const name = (row.patient_name as string) || '';
+
   return {
     id: row.id as string,
     date: row.date as string,
     startTime: row.start_time as string,
     endTime: (row.end_time as string | null) ?? undefined,
-    lunchBreakMinutes: (row.lunch_break_minutes as number | null) ?? undefined,
+    lunchBreakMinutes: undefined,
     consultant: row.consultant as Appointment['consultant'],
     appointmentType: row.appointment_type as string,
     patientInitials: ref,
