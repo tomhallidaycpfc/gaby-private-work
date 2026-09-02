@@ -182,12 +182,9 @@ export default function ConsolidatedInvoicing({
       const ref = a.patientReference || a.patientInitials;
       let details = a.appointmentType;
       
-      // For David Ross, add hours and lunch break info
+      // For David Ross, add hours to the description when present
       if (a.consultant === 'David Ross' && a.startTime && a.endTime) {
-        const lunchText = a.lunchBreakMinutes && a.lunchBreakMinutes > 0 
-          ? ` (${a.startTime}-${a.endTime}, -${a.lunchBreakMinutes}min lunch)`
-          : ` (${a.startTime}-${a.endTime})`;
-        details += lunchText;
+        details += ` (${a.startTime}-${a.endTime})`;
       }
       
       return [
@@ -418,9 +415,6 @@ export default function ConsolidatedInvoicing({
                           ? `${apt.startTime}-${apt.endTime}`
                           : apt.patientReference || (apt.patientInitials && apt.patientInitials !== 'N/A')
                           ? `Ref: ${apt.patientReference || apt.patientInitials}`
-                          : ''}
-                        {selectedConsultant === 'David Ross' && apt.lunchBreakMinutes && apt.lunchBreakMinutes > 0
-                          ? ` (${apt.lunchBreakMinutes}min lunch)`
                           : ''}
                       </span>
                       <span className="text-xs text-gray-600 block">

@@ -30,7 +30,6 @@ export function rowToAppointment(row: Record<string, unknown>): Appointment {
     date: row.date as string,
     startTime: row.start_time as string,
     endTime: (row.end_time as string | null) ?? undefined,
-    lunchBreakMinutes: undefined,
     consultant: row.consultant as Appointment['consultant'],
     appointmentType: row.appointment_type as string,
     patientInitials: ref,

@@ -4,7 +4,6 @@ export interface Appointment {
   date: string; // ISO date format (YYYY-MM-DD)
   startTime: string; // HH:mm format
   endTime?: string; // HH:mm format (optional, only for David Ross)
-  lunchBreakMinutes?: number; // Lunch break in minutes (for David Ross only)
   consultant: 'Victoria Rose' | 'Paul Roblin' | 'Maleeha Mughal' | 'Helen McEvoy' | 'David Ross' | 'Gaby De Luca';
   appointmentType: string; // e.g., "Initial Post Operative Review", "NPWT Dressing Change", etc.
   patientName?: string; // Internal record only (e.g. "Sarah Smith"), NOT on invoice

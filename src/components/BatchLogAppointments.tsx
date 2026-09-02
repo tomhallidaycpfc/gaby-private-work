@@ -20,7 +20,6 @@ interface BatchItem {
   birthYearDigits: string;
   startTime: string;
   endTime: string;
-  lunchBreakMinutes: number;
   cost: number;
 }
 
@@ -39,7 +38,6 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       birthYearDigits: '',
       startTime: '09:00',
       endTime: '10:00',
-      lunchBreakMinutes: 0,
       cost: 0,
     },
   ]);
@@ -56,7 +54,6 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
         birthYearDigits: copyFrom.birthYearDigits,
         startTime: copyFrom.startTime,
         endTime: copyFrom.endTime,
-        lunchBreakMinutes: copyFrom.lunchBreakMinutes,
         cost: copyFrom.cost,
       };
     }
@@ -71,7 +68,6 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
       birthYearDigits: '',
       startTime: '09:00',
       endTime: '10:00',
-      lunchBreakMinutes: 0,
       cost: lastItem ? lastItem.cost : 0,
     };
   }
@@ -127,8 +123,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           updated.consultant,
           updated.appointmentType,
           updated.startTime,
-          updated.endTime,
-          updated.lunchBreakMinutes
+          updated.endTime
         );
 
         return updated;
@@ -182,7 +177,6 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           date: item.date,
           startTime: item.startTime,
           endTime: item.consultant === 'David Ross' && item.appointmentType !== RETAINER_APPOINTMENT_TYPE ? item.endTime : undefined,
-          lunchBreakMinutes: item.consultant === 'David Ross' && item.appointmentType !== RETAINER_APPOINTMENT_TYPE ? item.lunchBreakMinutes : undefined,
           consultant: item.consultant as any,
           appointmentType: item.appointmentType,
           patientName: item.consultant === 'David Ross' ? 'N/A' : item.patientName.trim(),
@@ -216,7 +210,6 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
           birthYearDigits: '',
           startTime: '09:00',
           endTime: '10:00',
-          lunchBreakMinutes: 0,
           cost: 0,
         },
       ]);
@@ -378,7 +371,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
                         Retainer requires no time and is charged at £50
                       </div>
                     ) : (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 mb-1">
                           Start Time
@@ -402,35 +395,6 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
                           onChange={(e) =>
                             handleUpdateItem(item.id, 'endTime', e.target.value)
                           }
-                          className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">
-                          Lunch (mins)
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={item.lunchBreakMinutes}
-                          onChange={(e) => {
-                            const val = Math.max(0, Number(e.target.value));
-                            setItems((prev) =>
-                              prev.map((itm) => {
-                                if (itm.id !== item.id) return itm;
-                                const updated = { ...itm, lunchBreakMinutes: val };
-                                updated.cost = calculateAppointmentCost(
-                                  updated.consultant,
-                                  updated.appointmentType,
-                                  updated.startTime,
-                                  updated.endTime,
-                                  updated.lunchBreakMinutes
-                                );
-                                return updated;
-                              })
-                            );
-                          }}
-                          placeholder="0"
                           className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm"
                         />
                       </div>
