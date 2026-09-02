@@ -1,5 +1,8 @@
 // Appointment configuration and utilities
 
+// Retainer requires no time and is charged at a flat £50
+export const RETAINER_APPOINTMENT_TYPE = 'Retainer (No Time Required - £50)';
+
 export const CONSULTANTS = [
   'Victoria Rose',
   'Paul Roblin',
@@ -52,6 +55,7 @@ export const APPOINTMENT_TYPES = {
   ],
   'David Ross': [
     { name: 'Hourly Rate (£32/hour)', price: 32 }, // Special: calculated from hours
+    { name: RETAINER_APPOINTMENT_TYPE, price: 50 }, // Special: flat fee, no time required
   ],
   'Gaby De Luca': [
     { name: 'Initial Post Operative Review', price: 55 },
@@ -99,6 +103,10 @@ export function calculateAppointmentCost(
   endTime?: string,
   lunchBreakMinutes: number = 0
 ): number {
+  if (consultant === 'David Ross' && appointmentType === RETAINER_APPOINTMENT_TYPE) {
+    return 50; // Flat retainer fee, no time required
+  }
+
   if (consultant === 'David Ross' && startTime && endTime) {
     // Calculate hours for David Ross
     const [startHour, startMin] = startTime.split(':').map(Number);

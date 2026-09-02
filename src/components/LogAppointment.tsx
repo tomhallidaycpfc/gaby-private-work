@@ -5,6 +5,7 @@ import { Appointment } from '@/types';
 import {
   CONSULTANTS,
   APPOINTMENT_TYPES,
+  RETAINER_APPOINTMENT_TYPE,
   calculateAppointmentCost,
   formatCurrency,
   buildPatientReference,
@@ -28,6 +29,8 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
   const appointmentTypes =
     selectedConsultant &&
     APPOINTMENT_TYPES[selectedConsultant as keyof typeof APPOINTMENT_TYPES];
+
+  const isRetainer = selectedAppointmentType === RETAINER_APPOINTMENT_TYPE;
 
   const cost = calculateAppointmentCost(
     selectedConsultant,
@@ -62,8 +65,8 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
     const appointment: Appointment = {
       date,
       startTime,
-      endTime: selectedConsultant === 'David Ross' ? endTime : undefined,
-      lunchBreakMinutes: selectedConsultant === 'David Ross' ? lunchBreakMinutes : undefined,
+      endTime: selectedConsultant === 'David Ross' && !isRetainer ? endTime : undefined,
+      lunchBreakMinutes: selectedConsultant === 'David Ross' && !isRetainer ? lunchBreakMinutes : undefined,
       consultant: selectedConsultant as any,
       appointmentType: selectedAppointmentType,
       patientName: selectedConsultant === 'David Ross' ? 'N/A' : patientName.trim(),
@@ -168,21 +171,23 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
         )}
 
         {/* Start Time */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Start Time <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
-        </div>
+        {!isRetainer && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Start Time <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
+        )}
 
         {/* End Time (for David Ross only) */}
-        {selectedConsultant === 'David Ross' && (
+        {selectedConsultant === 'David Ross' && !isRetainer && (
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -268,11 +273,15 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
             </div>
             {selectedConsultant === 'David Ross' && (
               <div className="text-sm text-gray-600 mt-2 space-y-1">
-                <p>
-                  Hours: {startTime} - {endTime}
-                  {lunchBreakMinutes > 0 && ` (minus ${lunchBreakMinutes}min lunch)`}
-                  @ £32/hour
-                </p>
+                {isRetainer ? (
+                  <p>Retainer requires no time and is charged at £50</p>
+                ) : (
+                  <p>
+                    Hours: {startTime} - {endTime}
+                    {lunchBreakMinutes > 0 && ` (minus ${lunchBreakMinutes}min lunch)`}
+                    @ £32/hour
+                  </p>
+                )}
               </div>
             )}
           </div>

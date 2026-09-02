@@ -5,6 +5,7 @@ import { Appointment } from '@/types';
 import {
   CONSULTANTS,
   APPOINTMENT_TYPES,
+  RETAINER_APPOINTMENT_TYPE,
   calculateAppointmentCost,
   formatCurrency,
   buildPatientReference,
@@ -180,8 +181,8 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
         return {
           date: item.date,
           startTime: item.startTime,
-          endTime: item.consultant === 'David Ross' ? item.endTime : undefined,
-          lunchBreakMinutes: item.consultant === 'David Ross' ? item.lunchBreakMinutes : undefined,
+          endTime: item.consultant === 'David Ross' && item.appointmentType !== RETAINER_APPOINTMENT_TYPE ? item.endTime : undefined,
+          lunchBreakMinutes: item.consultant === 'David Ross' && item.appointmentType !== RETAINER_APPOINTMENT_TYPE ? item.lunchBreakMinutes : undefined,
           consultant: item.consultant as any,
           appointmentType: item.appointmentType,
           patientName: item.consultant === 'David Ross' ? 'N/A' : item.patientName.trim(),
@@ -372,6 +373,11 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
 
                   {/* Patient Name / Times */}
                   {item.consultant === 'David Ross' ? (
+                    item.appointmentType === RETAINER_APPOINTMENT_TYPE ? (
+                      <div className="flex items-center text-xs text-gray-600">
+                        Retainer requires no time and is charged at £50
+                      </div>
+                    ) : (
                     <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -429,6 +435,7 @@ export default function BatchLogAppointments({ onAppointmentsSaved }: BatchLogAp
                         />
                       </div>
                     </div>
+                    )
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:col-span-1">
                       <div>
