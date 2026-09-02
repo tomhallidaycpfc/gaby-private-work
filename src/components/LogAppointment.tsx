@@ -202,6 +202,21 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Lunch Break (minutes)
+              </label>
+              <input
+                type="number"
+                value={lunchBreakMinutes}
+                onChange={(e) => setLunchBreakMinutes(Math.max(0, Number(e.target.value)))}
+                min="0"
+                max="480"
+                placeholder="e.g., 60 for 1 hour"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">This will be deducted from invoiced hours</p>
+            </div>
           </>
         )}
 
@@ -261,10 +276,15 @@ export default function LogAppointment({ onAppointmentSaved }: LogAppointmentPro
                 {isRetainer ? (
                   <p>Retainer requires no time and is charged at £50</p>
                 ) : (
-                  <p>
-                    Hours: {startTime} - {endTime}
+                  <>
+                    <p>
+                      Hours: {startTime} - {endTime}
                       @ £32/hour
-                  </p>
+                    </p>
+                    {lunchBreakMinutes > 0 && (
+                      <p>Less lunch break: {lunchBreakMinutes} minutes</p>
+                    )}
+                  </>
                 )}
               </div>
             )}
