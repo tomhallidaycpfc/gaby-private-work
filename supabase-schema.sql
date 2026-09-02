@@ -14,6 +14,9 @@ create table if not exists public.appointments (
   updated_at timestamptz not null default now()
 );
 
+alter table public.appointments
+  add column if not exists lunch_break_minutes integer not null default 0;
+
 create index if not exists appointments_date_idx on public.appointments (date);
 create index if not exists appointments_consultant_idx on public.appointments (consultant);
 create index if not exists appointments_invoiced_idx on public.appointments (invoiced);
