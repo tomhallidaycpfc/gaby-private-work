@@ -89,6 +89,12 @@ Email: gabydeluca.nursing@outlook.com`;
             email: outlookEmail,
             name: 'Gabriella De Luca',
           },
+          bcc: [
+            {
+              email: outlookEmail,
+              name: 'Gabriella De Luca',
+            },
+          ],
           subject: subjectText,
           textContent: bodyText,
           attachment: [
@@ -119,6 +125,7 @@ Email: gabydeluca.nursing@outlook.com`;
       const { data, error: resendError } = await resend.emails.send({
         from: 'Gabriella De Luca <onboarding@resend.dev>',
         to: [invoice.consultantEmail],
+        bcc: [outlookEmail],
         replyTo: 'gabydeluca.nursing@outlook.com',
         subject: subjectText,
         text: bodyText,
@@ -168,6 +175,7 @@ Email: gabydeluca.nursing@outlook.com`;
     await transporter.sendMail({
       from: `Gabriella De Luca <${outlookEmail}>`,
       to: invoice.consultantEmail,
+      bcc: outlookEmail,
       subject: subjectText,
       text: bodyText,
       attachments: [

@@ -12,6 +12,7 @@ import {
   generateInvoiceNumber,
   getPreviousMonth,
   getMonthRange,
+  getInvoiceableHours,
 } from '@/lib/utils';
 
 interface MonthEndInvoicingProps {
@@ -70,10 +71,16 @@ export default function MonthEndInvoicing({
 
     const tableData = invoice.appointments.map((a) => {
       const ref = a.patientReference || a.patientInitials;
+      const claimedHours = a.consultant === 'David Ross'
+        ? getInvoiceableHours(a.startTime, a.endTime, a.lunchBreakMinutes)
+        : undefined;
+      const serviceDetails = claimedHours === undefined
+        ? a.appointmentType
+        : `${a.appointmentType} (${a.startTime}-${a.endTime}, ${a.lunchBreakMinutes ?? 0}min lunch, ${claimedHours} hours claimed)`;
       return [
         formatDate(a.date),
         a.consultant === 'David Ross' || !ref || ref === 'N/A' ? '-' : ref,
-        a.appointmentType,
+        serviceDetails,
         formatCurrency(a.cost),
       ];
     });

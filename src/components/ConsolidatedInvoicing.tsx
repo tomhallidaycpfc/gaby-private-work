@@ -11,6 +11,7 @@ import {
   formatCurrency,
   formatDate,
   generateInvoiceNumber,
+  getInvoiceableHours,
 } from '@/lib/utils';
 
 interface ConsolidatedInvoicingProps {
@@ -182,12 +183,9 @@ export default function ConsolidatedInvoicing({
       const ref = a.patientReference || a.patientInitials;
       let details = a.appointmentType;
       
-      // For David Ross, add hours and lunch break info
       if (a.consultant === 'David Ross' && a.startTime && a.endTime) {
-        const lunchText = a.lunchBreakMinutes && a.lunchBreakMinutes > 0 
-          ? ` (${a.startTime}-${a.endTime}, -${a.lunchBreakMinutes}min lunch)`
-          : ` (${a.startTime}-${a.endTime})`;
-        details += lunchText;
+        const claimedHours = getInvoiceableHours(a.startTime, a.endTime, a.lunchBreakMinutes);
+        details += ` (${a.startTime}-${a.endTime}, ${a.lunchBreakMinutes ?? 0}min lunch, ${claimedHours} hours claimed)`;
       }
       
       return [

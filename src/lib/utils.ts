@@ -93,6 +93,23 @@ export const GABY_DETAILS = {
   },
 };
 
+export function getInvoiceableHours(
+  startTime?: string,
+  endTime?: string,
+  lunchBreakMinutes: number = 0
+): number | undefined {
+  if (!startTime || !endTime) return undefined;
+
+  const [startHour, startMin] = startTime.split(':').map(Number);
+  const [endHour, endMin] = endTime.split(':').map(Number);
+  const startMinutes = startHour * 60 + startMin;
+  const endMinutes = endHour * 60 + endMin;
+  let duration = (endMinutes - startMinutes) / 60;
+  if (duration < 0) duration += 24;
+
+  return Math.max(0, duration - lunchBreakMinutes / 60);
+}
+
 /**
  * Calculate appointment cost
  */
@@ -108,16 +125,7 @@ export function calculateAppointmentCost(
   }
 
   if (consultant === 'David Ross' && startTime && endTime) {
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
-
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-
-    let duration = (endMinutes - startMinutes) / 60;
-    if (duration < 0) duration += 24;
-
-    const invoiceableHours = Math.max(0, duration - lunchBreakMinutes / 60);
+    const invoiceableHours = getInvoiceableHours(startTime, endTime, lunchBreakMinutes) ?? 0;
     return Math.round(invoiceableHours * 32 * 100) / 100; // £32/hour
   }
 
