@@ -7,3 +7,8 @@ node_modules
 dist
 build
 .turbo
+
+# Local PDF documents not intended for the repo
+"Places for people Form of Authority 02 09 26 PDF.pdf"
+"Places for people Form of authority 020926.pdf"
+
