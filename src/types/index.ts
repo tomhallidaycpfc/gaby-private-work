@@ -5,7 +5,7 @@ export interface Appointment {
   startTime: string; // HH:mm format
   endTime?: string; // HH:mm format (optional, only for David Ross)
   lunchBreakMinutes?: number; // Lunch break in minutes (for David Ross only)
-  consultant: 'Victoria Rose' | 'Paul Roblin' | 'Maleeha Mughal' | 'Helen McEvoy' | 'David Ross' | 'Gaby De Luca';
+  consultant: 'Victoria Rose' | 'Paul Roblin' | 'Maleeha Mughal' | 'Helen McEvoy' | 'David Ross' | 'Gaby De Luca' | 'Mr Mark Ho-Asjoe';
   appointmentType: string; // e.g., "Initial Post Operative Review", "NPWT Dressing Change", etc.
   patientName?: string; // Internal record only (e.g. "Sarah Smith"), NOT on invoice
   patientReference?: string; // Patient reference (e.g. "Ref 102" or initials), DOES appear on invoice
@@ -21,7 +21,7 @@ export interface Appointment {
 export interface Invoice {
   id?: string;
   invoiceNumber: string; // Auto-generated, e.g., INV-2026-08-001
-  consultant: 'Victoria Rose' | 'Paul Roblin' | 'Maleeha Mughal' | 'Helen McEvoy' | 'David Ross' | 'Gaby De Luca';
+  consultant: 'Victoria Rose' | 'Paul Roblin' | 'Maleeha Mughal' | 'Helen McEvoy' | 'David Ross' | 'Gaby De Luca' | 'Mr Mark Ho-Asjoe';
   consultantEmail: string;
   month: string; // YYYY-MM format (e.g., "2026-08")
   appointments: Appointment[];

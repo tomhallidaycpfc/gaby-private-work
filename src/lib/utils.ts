@@ -10,6 +10,7 @@ export const CONSULTANTS = [
   'Helen McEvoy',
   'David Ross',
   'Gaby De Luca',
+  'Mr Mark Ho-Asjoe',
 ] as const;
 
 export const APPOINTMENT_TYPES = {
@@ -67,6 +68,16 @@ export const APPOINTMENT_TYPES = {
     { name: 'NPWT Domiciliary', price: 100 },
     { name: 'Routine Post operative Review & Follow Up Dressing Change (Domiciliary)', price: 80 },
   ],
+  'Mr Mark Ho-Asjoe': [
+    { name: 'Initial Post Operative Review', price: 55 },
+    { name: 'Subsequent Follow Up OPAs', price: 55 },
+    { name: 'NPWT Dressing Change (VAC)', price: 80 },
+    { name: 'Ward Review', price: 35 },
+    { name: 'Post operative Call / Consultation / Virtual Wound Review', price: 30 },
+    { name: 'New OPA for Wound Consultation & Specialist Compression Bandaging (Domiciliary)', price: 100 },
+    { name: 'NPWT Domiciliary', price: 100 },
+    { name: 'Routine Post operative Review & Follow Up Dressing Change (Domiciliary)', price: 80 },
+  ],
 } as const;
 
 export const CONSULTANT_EMAILS = {
@@ -76,6 +87,7 @@ export const CONSULTANT_EMAILS = {
   'Helen McEvoy': 'enquiries@cosdocs.co.uk',
   'David Ross': 'roz@plasticsurgeryw1.com',
   'Gaby De Luca': 'gaby.deluca@btinternet.com',
+  'Mr Mark Ho-Asjoe': 'enquiry@markhoasjoe.co.uk',
 } as const;
 
 // Gaby's details
