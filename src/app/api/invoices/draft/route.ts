@@ -3,7 +3,12 @@ import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import { Invoice } from '@/types';
 import { generateInvoicePDFBuffer } from '@/lib/pdf';
-import { GABY_DETAILS, formatCurrency, formatDate } from '@/lib/utils';
+import {
+  GABY_DETAILS,
+  formatCurrency,
+  formatDate,
+  getInvoiceableHoursTotal,
+} from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +30,9 @@ export async function POST(request: NextRequest) {
         return `  ${formatDate(a.date)} | ${patientStr}${a.appointmentType} | ${formatCurrency(a.cost)}`;
       })
       .join('\n');
+    const totalHours = invoice.consultant === 'David Ross'
+      ? getInvoiceableHoursTotal(invoice.appointments)
+      : undefined;
 
     const bodyText = `Hi there,
 
@@ -42,7 +50,7 @@ SERVICES PROVIDED:
 ${appointmentsList}
 
 ───────────────────────────────────────
-TOTAL DUE: ${formatCurrency(invoice.totalCost)}
+ ${totalHours !== undefined ? `TOTAL HOURS: ${totalHours}\n` : ''}TOTAL DUE: ${formatCurrency(invoice.totalCost)}
 ───────────────────────────────────────
 
 PAYMENT DETAILS:

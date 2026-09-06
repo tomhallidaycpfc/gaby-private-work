@@ -12,6 +12,7 @@ import {
   formatDate,
   generateInvoiceNumber,
   getInvoiceableHours,
+  getInvoiceableHoursTotal,
 } from '@/lib/utils';
 
 interface ConsolidatedInvoicingProps {
@@ -182,12 +183,12 @@ export default function ConsolidatedInvoicing({
     const tableData = invoice.appointments.map((a) => {
       const ref = a.patientReference || a.patientInitials;
       let details = a.appointmentType;
-      
+
       if (a.consultant === 'David Ross' && a.startTime && a.endTime) {
         const claimedHours = getInvoiceableHours(a.startTime, a.endTime, a.lunchBreakMinutes);
         details += ` (${a.startTime}-${a.endTime}, ${a.lunchBreakMinutes ?? 0}min lunch, ${claimedHours} hours claimed)`;
       }
-      
+
       return [
         formatDate(a.date),
         a.consultant === 'David Ross' || !ref || ref === 'N/A' ? '-' : ref,
@@ -215,11 +216,22 @@ export default function ConsolidatedInvoicing({
     });
 
     const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const totalHours = invoice.consultant === 'David Ross'
+      ? getInvoiceableHoursTotal(invoice.appointments)
+      : undefined;
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text(`TOTAL DUE: ${formatCurrency(invoice.totalCost)}`, 196, finalY, { align: 'right' });
+    if (totalHours !== undefined) {
+      doc.text(`TOTAL HOURS: ${totalHours}`, 196, finalY, { align: 'right' });
+    }
+    doc.text(
+      `TOTAL DUE: ${formatCurrency(invoice.totalCost)}`,
+      196,
+      totalHours !== undefined ? finalY + 7 : finalY,
+      { align: 'right' }
+    );
 
-    const boxY = finalY + 15;
+    const boxY = finalY + (totalHours !== undefined ? 22 : 15);
     doc.setFillColor(243, 244, 246);
     doc.rect(14, boxY, 182, 35, 'F');
 

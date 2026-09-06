@@ -110,6 +110,28 @@ export function getInvoiceableHours(
   return Math.max(0, duration - lunchBreakMinutes / 60);
 }
 
+export function getInvoiceableHoursTotal(
+  appointments: Array<{
+    startTime?: string;
+    endTime?: string;
+    lunchBreakMinutes?: number;
+  }>
+): number | undefined {
+  const hours = appointments
+    .map((appointment) =>
+      getInvoiceableHours(
+        appointment.startTime,
+        appointment.endTime,
+        appointment.lunchBreakMinutes
+      )
+    )
+    .filter((value): value is number => value !== undefined);
+
+  return hours.length > 0
+    ? Math.round(hours.reduce((total, value) => total + value, 0) * 100) / 100
+    : undefined;
+}
+
 /**
  * Calculate appointment cost
  */

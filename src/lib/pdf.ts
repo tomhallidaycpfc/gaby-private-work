@@ -1,7 +1,13 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Invoice } from '@/types';
-import { GABY_DETAILS, formatCurrency, formatDate, getInvoiceableHours } from '@/lib/utils';
+import {
+  GABY_DETAILS,
+  formatCurrency,
+  formatDate,
+  getInvoiceableHours,
+  getInvoiceableHoursTotal,
+} from '@/lib/utils';
 
 export function generateInvoicePDFBuffer(invoice: Invoice): Buffer {
   const doc = new jsPDF();
@@ -80,12 +86,23 @@ export function generateInvoicePDFBuffer(invoice: Invoice): Buffer {
 
   // Total
   const finalY = (doc as any).lastAutoTable.finalY + 10;
+  const totalHours = invoice.consultant === 'David Ross'
+    ? getInvoiceableHoursTotal(invoice.appointments)
+    : undefined;
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text(`TOTAL DUE: ${formatCurrency(invoice.totalCost)}`, 196, finalY, { align: 'right' });
+  if (totalHours !== undefined) {
+    doc.text(`TOTAL HOURS: ${totalHours}`, 196, finalY, { align: 'right' });
+  }
+  doc.text(
+    `TOTAL DUE: ${formatCurrency(invoice.totalCost)}`,
+    196,
+    totalHours !== undefined ? finalY + 7 : finalY,
+    { align: 'right' }
+  );
 
   // Payment Info Box
-  const boxY = finalY + 15;
+  const boxY = finalY + (totalHours !== undefined ? 22 : 15);
   doc.setFillColor(243, 244, 246);
   doc.rect(14, boxY, 182, 35, 'F');
 
