@@ -87,7 +87,7 @@ export const CONSULTANT_EMAILS = {
   'Helen McEvoy': 'enquiries@cosdocs.co.uk',
   'David Ross': 'roz@plasticsurgeryw1.com',
   'Gaby De Luca': 'gaby.deluca@btinternet.com',
-  'Mr Mark Ho-Asjoe': 'enquiry@markhoasjoe.co.uk',
+  'Mr Mark Ho-Asjoe': 'mark@markhoasjoe.co.uk',
 } as const;
 
 // Gaby's details

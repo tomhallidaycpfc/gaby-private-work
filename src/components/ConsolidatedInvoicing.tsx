@@ -183,12 +183,12 @@ export default function ConsolidatedInvoicing({
     const tableData = invoice.appointments.map((a) => {
       const ref = a.patientReference || a.patientInitials;
       let details = a.appointmentType;
-
+      
       if (a.consultant === 'David Ross' && a.startTime && a.endTime) {
         const claimedHours = getInvoiceableHours(a.startTime, a.endTime, a.lunchBreakMinutes);
         details += ` (${a.startTime}-${a.endTime}, ${a.lunchBreakMinutes ?? 0}min lunch, ${claimedHours} hours claimed)`;
       }
-
+      
       return [
         formatDate(a.date),
         a.consultant === 'David Ross' || !ref || ref === 'N/A' ? '-' : ref,
