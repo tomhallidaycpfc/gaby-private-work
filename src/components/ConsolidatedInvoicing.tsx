@@ -38,6 +38,7 @@ export default function ConsolidatedInvoicing({
   const [correctionAddedIds, setCorrectionAddedIds] = useState<string[]>([]);
   const [correctionSaving, setCorrectionSaving] = useState(false);
   const [correctionReview, setCorrectionReview] = useState<Invoice | null>(null);
+  const [sendAsCorrection, setSendAsCorrection] = useState(false);
 
   // Get ALL uninvoiced appointments for the selected consultant across ANY month
   const uninvoicedApts = useMemo(() => {
@@ -619,6 +620,12 @@ export default function ConsolidatedInvoicing({
                 })}
               </div>
 
+              {inv.correctedAt && (
+                <div className="bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold rounded-lg px-3 py-2">
+                  ⚠️ This invoice was corrected and hasn't been resent yet. Use "Send Corrected Invoice" below to email {inv.consultant} the apology and updated PDF.
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2 pt-2 border-t">
                 <button
                   onClick={() => setSelectedInvoice(inv)}
@@ -633,11 +640,20 @@ export default function ConsolidatedInvoicing({
                   📄 Download PDF
                 </button>
                 <button
-                  onClick={() => setConfirmSendInvoice(inv)}
+                  onClick={() => {
+                    setSendAsCorrection(Boolean(inv.correctedAt));
+                    setConfirmSendInvoice(inv);
+                  }}
                   disabled={sendingEmailFor === inv.invoiceNumber}
-                  className="flex-1 min-w-[160px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-xs"
+                  className={`flex-1 min-w-[160px] disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-xs ${
+                    inv.correctedAt ? 'bg-amber-600 hover:bg-amber-700' : 'bg-purple-600 hover:bg-purple-700'
+                  }`}
                 >
-                  {sendingEmailFor === inv.invoiceNumber ? 'Sending...' : '✉️ Send via Outlook'}
+                  {sendingEmailFor === inv.invoiceNumber
+                    ? 'Sending...'
+                    : inv.correctedAt
+                    ? '📧 Send Corrected Invoice'
+                    : '✉️ Send via Outlook'}
                 </button>
                 <button
                   onClick={() => handleOpenCorrection(inv)}
@@ -755,6 +771,19 @@ export default function ConsolidatedInvoicing({
               </div>
             </div>
 
+            <label className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={sendAsCorrection}
+                onChange={(e) => setSendAsCorrection(e.target.checked)}
+                className="w-4 h-4 mt-0.5 text-amber-600 rounded focus:ring-amber-500"
+              />
+              <span className="text-xs text-gray-700">
+                <strong>This is a correction</strong> — include an apology explaining her records were corrected
+                (tick this if the invoice was edited but isn't flagged as corrected above).
+              </span>
+            </label>
+
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setConfirmSendInvoice(null)}
@@ -765,8 +794,9 @@ export default function ConsolidatedInvoicing({
               <button
                 onClick={() => {
                   const inv = confirmSendInvoice;
+                  const isCorrection = sendAsCorrection;
                   setConfirmSendInvoice(null);
-                  handleSendOutlookEmail(inv);
+                  handleSendOutlookEmail(inv, isCorrection);
                 }}
                 className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5"
               >

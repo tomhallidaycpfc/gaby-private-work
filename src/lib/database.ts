@@ -57,6 +57,7 @@ export function invoiceToRow(invoice: Invoice) {
     issue_date: invoice.issueDate,
     due_date: invoice.dueDate,
     status: invoice.status,
+    corrected_at: invoice.correctedAt ?? null,
     created_at: invoice.createdAt,
     updated_at: invoice.updatedAt,
   };
@@ -74,6 +75,7 @@ export function rowToInvoice(row: Record<string, unknown>): Invoice {
     issueDate: row.issue_date as string,
     dueDate: row.due_date as string,
     status: row.status as Invoice['status'],
+    correctedAt: (row.corrected_at as string | null) ?? undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

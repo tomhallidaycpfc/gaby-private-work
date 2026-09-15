@@ -39,6 +39,9 @@ create table if not exists public.invoices (
 create index if not exists invoices_month_idx on public.invoices (month);
 create index if not exists invoices_consultant_idx on public.invoices (consultant);
 
+alter table public.invoices
+  add column if not exists corrected_at timestamptz;
+
 alter table public.appointments enable row level security;
 alter table public.invoices enable row level security;
 

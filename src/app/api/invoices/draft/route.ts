@@ -3,12 +3,18 @@ import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import { Invoice } from '@/types';
 import { generateInvoicePDFBuffer } from '@/lib/pdf';
+import { supabase } from '@/lib/supabase';
 import {
   GABY_DETAILS,
   formatCurrency,
   formatDate,
   getInvoiceableHoursTotal,
 } from '@/lib/utils';
+
+async function clearCorrectionFlag(invoiceId?: string) {
+  if (!invoiceId) return;
+  await supabase.from('invoices').update({ corrected_at: null }).eq('id', invoiceId);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -132,6 +138,8 @@ Email: gabydeluca.nursing@outlook.com`;
         throw new Error(brevoData.message || brevoData.error || 'Brevo API Error');
       }
 
+      await clearCorrectionFlag(invoice.id);
+
       return NextResponse.json({
         success: true,
         message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
@@ -160,6 +168,8 @@ Email: gabydeluca.nursing@outlook.com`;
       if (resendError) {
         throw new Error(resendError.message);
       }
+
+      await clearCorrectionFlag(invoice.id);
 
       return NextResponse.json({
         success: true,
@@ -206,6 +216,8 @@ Email: gabydeluca.nursing@outlook.com`;
         },
       ],
     });
+
+    await clearCorrectionFlag(invoice.id);
 
     return NextResponse.json({
       success: true,

@@ -29,6 +29,7 @@ export interface Invoice {
   issueDate: string; // ISO date
   dueDate: string; // ISO date (30 days after issue)
   status: 'draft' | 'sent' | 'paid';
+  correctedAt?: string; // Set when appointments are edited after the invoice was originally sent; cleared once resent
   createdAt?: string;
   updatedAt?: string;
 }

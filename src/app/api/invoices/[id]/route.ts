@@ -52,6 +52,7 @@ export async function PATCH(
         .update({
           appointments,
           total_cost: totalCost,
+          corrected_at: now,
           ...(status ? { status } : {}),
           updated_at: now,
         })
