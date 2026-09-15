@@ -33,10 +33,16 @@ export async function PATCH(
       if (fetchError) throw fetchError;
 
       const existingInvoice = rowToInvoice(existingRow);
+      const existingIds = new Set(
+        (existingInvoice.appointments || []).map((a) => a.id).filter(Boolean)
+      );
       const keptIds = new Set(appointments.map((a) => a.id).filter(Boolean));
       const removedIds = (existingInvoice.appointments || [])
         .map((a) => a.id)
         .filter((aptId): aptId is string => Boolean(aptId) && !keptIds.has(aptId));
+      const addedIds = appointments
+        .map((a) => a.id)
+        .filter((aptId): aptId is string => Boolean(aptId) && !existingIds.has(aptId));
 
       const now = new Date().toISOString();
       const totalCost = appointments.reduce((sum, a) => sum + a.cost, 0);
@@ -61,6 +67,15 @@ export async function PATCH(
           .update({ invoiced: false, invoice_month: null, updated_at: now })
           .in('id', removedIds);
         if (updateError) throw updateError;
+      }
+
+      // Mark newly added appointments as invoiced under this invoice
+      if (addedIds.length > 0) {
+        const { error: addError } = await supabase
+          .from('appointments')
+          .update({ invoiced: true, invoice_month: existingInvoice.month, updated_at: now })
+          .in('id', addedIds);
+        if (addError) throw addError;
       }
 
       return NextResponse.json(rowToInvoice(data));

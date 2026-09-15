@@ -35,6 +35,7 @@ export default function ConsolidatedInvoicing({
   const [previewInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [correctingInvoice, setCorrectingInvoice] = useState<Invoice | null>(null);
   const [correctionKeptIds, setCorrectionKeptIds] = useState<string[]>([]);
+  const [correctionAddedIds, setCorrectionAddedIds] = useState<string[]>([]);
   const [correctionSaving, setCorrectionSaving] = useState(false);
 
   // Get ALL uninvoiced appointments for the selected consultant across ANY month
@@ -60,6 +61,14 @@ export default function ConsolidatedInvoicing({
       (i) => i.consultant === selectedConsultant && i.month.includes('Backlog')
     );
   }, [invoices, selectedConsultant]);
+
+  // Uninvoiced appointments available to add while correcting an invoice
+  const correctionAvailableApts = useMemo(() => {
+    if (!correctingInvoice) return [];
+    return appointments.filter(
+      (a) => a.consultant === correctingInvoice.consultant && !a.invoiced
+    );
+  }, [appointments, correctingInvoice]);
 
   function handleSelectAll() {
     setSelectedAptIds(uninvoicedApts.map((a) => a.id!).filter(Boolean));
@@ -278,10 +287,17 @@ export default function ConsolidatedInvoicing({
   function handleOpenCorrection(invoice: Invoice) {
     setCorrectingInvoice(invoice);
     setCorrectionKeptIds(invoice.appointments.map((a) => a.id!).filter(Boolean));
+    setCorrectionAddedIds([]);
   }
 
   function handleToggleCorrectionApt(id: string) {
     setCorrectionKeptIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  }
+
+  function handleToggleCorrectionAdd(id: string) {
+    setCorrectionAddedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   }
@@ -292,21 +308,31 @@ export default function ConsolidatedInvoicing({
     const keptAppointments = correctingInvoice.appointments.filter(
       (a) => a.id && correctionKeptIds.includes(a.id)
     );
+    const addedAppointments = appointments.filter(
+      (a) => a.id && correctionAddedIds.includes(a.id)
+    );
+    const newAppointments = [...keptAppointments, ...addedAppointments];
 
-    if (keptAppointments.length === correctingInvoice.appointments.length) {
-      alert('Please remove at least one appointment to correct this invoice.');
+    const removedCount = correctingInvoice.appointments.length - keptAppointments.length;
+    const addedCount = addedAppointments.length;
+
+    if (removedCount === 0 && addedCount === 0) {
+      alert('Please remove or add at least one appointment to correct this invoice.');
       return;
     }
 
-    if (keptAppointments.length === 0) {
+    if (newAppointments.length === 0) {
       alert('An invoice must retain at least one appointment. Use Delete Invoice instead if none should remain.');
       return;
     }
 
-    const removedCount = correctingInvoice.appointments.length - keptAppointments.length;
+    const changeParts = [
+      removedCount > 0 ? `remove ${removedCount} appointment(s)` : null,
+      addedCount > 0 ? `add ${addedCount} appointment(s)` : null,
+    ].filter(Boolean);
     if (
       !confirm(
-        `Remove ${removedCount} appointment(s) from invoice ${correctingInvoice.invoiceNumber}? The corrected invoice will be re-emailed to ${correctingInvoice.consultant} with an apology, BCC'd to you.`
+        `Correct invoice ${correctingInvoice.invoiceNumber} to ${changeParts.join(' and ')}? The corrected invoice will be re-emailed to ${correctingInvoice.consultant} with an apology, BCC'd to you.`
       )
     ) {
       return;
@@ -317,7 +343,7 @@ export default function ConsolidatedInvoicing({
       const response = await fetch(`/api/invoices/${correctingInvoice.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ appointments: keptAppointments }),
+        body: JSON.stringify({ appointments: newAppointments }),
       });
 
       const data = await response.json();
@@ -767,52 +793,98 @@ export default function ConsolidatedInvoicing({
             </div>
 
             <p className="text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-              Untick any appointment(s) that were included by mistake. Saving will remove them from this invoice
-              (returning them to the unbilled pool), recalculate the total, and re-send the corrected invoice to{' '}
+              Untick any appointment(s) that were included by mistake, and/or add one that was left out below.
+              Saving will update this invoice (returning unticked appointments to the unbilled pool and marking any
+              added ones as billed), recalculate the total, and re-send the corrected invoice to{' '}
               <strong>{correctingInvoice.consultant}</strong> with an apology — BCC'd to you.
             </p>
 
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1 divide-y">
-              {correctingInvoice.appointments.map((apt) => {
-                const isKept = Boolean(apt.id && correctionKeptIds.includes(apt.id));
-                const ref = apt.patientReference || apt.patientInitials;
-                return (
-                  <label
-                    key={apt.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition ${
-                      isKept ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200 opacity-70'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={isKept}
-                        onChange={() => apt.id && handleToggleCorrectionApt(apt.id)}
-                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-                      />
-                      <div>
-                        <span className="font-semibold text-sm text-gray-900">{formatDate(apt.date)}</span>
-                        <span className="text-xs text-gray-500 ml-2">
-                          {ref && ref !== 'N/A' ? `Ref: ${ref}` : ''}
-                        </span>
-                        <span className="text-xs text-gray-600 block">{apt.appointmentType}</span>
+            <div>
+              <h4 className="text-xs font-bold text-gray-700 uppercase mb-2">Appointments on this invoice</h4>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1 divide-y">
+                {correctingInvoice.appointments.map((apt) => {
+                  const isKept = Boolean(apt.id && correctionKeptIds.includes(apt.id));
+                  const ref = apt.patientReference || apt.patientInitials;
+                  return (
+                    <label
+                      key={apt.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition ${
+                        isKept ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200 opacity-70'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isKept}
+                          onChange={() => apt.id && handleToggleCorrectionApt(apt.id)}
+                          className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                        />
+                        <div>
+                          <span className="font-semibold text-sm text-gray-900">{formatDate(apt.date)}</span>
+                          <span className="text-xs text-gray-500 ml-2">
+                            {ref && ref !== 'N/A' ? `Ref: ${ref}` : ''}
+                          </span>
+                          <span className="text-xs text-gray-600 block">{apt.appointmentType}</span>
+                        </div>
                       </div>
-                    </div>
-                    <span className="font-bold text-sm text-indigo-700">{formatCurrency(apt.cost)}</span>
-                  </label>
-                );
-              })}
+                      <span className="font-bold text-sm text-indigo-700">{formatCurrency(apt.cost)}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
+
+            {correctionAvailableApts.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold text-gray-700 uppercase mb-2">
+                  Add a missed appointment ({correctingInvoice.consultant})
+                </h4>
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1 divide-y">
+                  {correctionAvailableApts.map((apt) => {
+                    const isAdded = Boolean(apt.id && correctionAddedIds.includes(apt.id));
+                    const ref = apt.patientReference || apt.patientInitials;
+                    return (
+                      <label
+                        key={apt.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition ${
+                          isAdded ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isAdded}
+                            onChange={() => apt.id && handleToggleCorrectionAdd(apt.id)}
+                            className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                          />
+                          <div>
+                            <span className="font-semibold text-sm text-gray-900">{formatDate(apt.date)}</span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              {ref && ref !== 'N/A' ? `Ref: ${ref}` : ''}
+                            </span>
+                            <span className="text-xs text-gray-600 block">{apt.appointmentType}</span>
+                          </div>
+                        </div>
+                        <span className="font-bold text-sm text-indigo-700">{formatCurrency(apt.cost)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex justify-between items-center">
               <span className="text-xs font-semibold text-gray-700">
-                Keeping {correctionKeptIds.length} of {correctingInvoice.appointments.length} appointment(s)
+                {correctionKeptIds.length + correctionAddedIds.length} appointment(s) on corrected invoice
               </span>
               <span className="text-lg font-bold text-indigo-700">
                 {formatCurrency(
                   correctingInvoice.appointments
                     .filter((a) => a.id && correctionKeptIds.includes(a.id))
-                    .reduce((sum, a) => sum + a.cost, 0)
+                    .reduce((sum, a) => sum + a.cost, 0) +
+                    correctionAvailableApts
+                      .filter((a) => a.id && correctionAddedIds.includes(a.id))
+                      .reduce((sum, a) => sum + a.cost, 0)
                 )}
               </span>
             </div>
