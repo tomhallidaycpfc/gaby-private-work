@@ -37,6 +37,7 @@ export default function ConsolidatedInvoicing({
   const [correctionKeptIds, setCorrectionKeptIds] = useState<string[]>([]);
   const [correctionAddedIds, setCorrectionAddedIds] = useState<string[]>([]);
   const [correctionSaving, setCorrectionSaving] = useState(false);
+  const [correctionReview, setCorrectionReview] = useState<Invoice | null>(null);
 
   // Get ALL uninvoiced appointments for the selected consultant across ANY month
   const uninvoicedApts = useMemo(() => {
@@ -332,7 +333,7 @@ export default function ConsolidatedInvoicing({
     ].filter(Boolean);
     if (
       !confirm(
-        `Correct invoice ${correctingInvoice.invoiceNumber} to ${changeParts.join(' and ')}? The corrected invoice will be re-emailed to ${correctingInvoice.consultant} with an apology, BCC'd to you.`
+        `Correct invoice ${correctingInvoice.invoiceNumber} to ${changeParts.join(' and ')}? You'll be able to review the corrected invoice before it's emailed.`
       )
     ) {
       return;
@@ -351,7 +352,7 @@ export default function ConsolidatedInvoicing({
 
       setCorrectingInvoice(null);
       onInvoiceGenerated();
-      await handleSendOutlookEmail(data as Invoice, true);
+      setCorrectionReview(data as Invoice);
     } catch (error) {
       console.error('Error correcting invoice:', error);
       alert('Error correcting invoice');
@@ -901,7 +902,88 @@ export default function ConsolidatedInvoicing({
                 disabled={correctionSaving}
                 className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-400 text-white font-bold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5"
               >
-                {correctionSaving ? 'Saving & Sending...' : '✅ Save & Re-send Corrected Invoice'}
+                {correctionSaving ? 'Saving...' : '💾 Save Corrections & Review'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Corrected Invoice Before Sending */}
+      {correctionReview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 shadow-2xl">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Corrected Invoice Ready</h3>
+                <p className="text-xs text-gray-500 mt-1">Review the corrected invoice below before it's emailed.</p>
+              </div>
+              <button
+                onClick={() => setCorrectionReview(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="text-sm space-y-4 font-mono">
+              <div>
+                <p className="font-bold">{GABY_DETAILS.name}</p>
+                <p>{GABY_DETAILS.credentials}</p>
+                <p>Pin: {GABY_DETAILS.pinNumber}</p>
+              </div>
+
+              <div className="border-t pt-4">
+                <p><strong>Invoice Number:</strong> {correctionReview.invoiceNumber}</p>
+                <p><strong>To:</strong> {correctionReview.consultant}</p>
+                <p><strong>Period:</strong> {correctionReview.month}</p>
+                <p><strong>Issue Date:</strong> {formatDate(correctionReview.issueDate)}</p>
+              </div>
+
+              <div className="border-t pt-4">
+                {correctionReview.appointments.map((apt, idx) => {
+                  const ref = apt.patientReference || apt.patientInitials;
+                  return (
+                    <div key={idx} className="flex justify-between mb-2">
+                      <span>
+                        {formatDate(apt.date)}
+                        {ref && ref !== 'N/A' ? ` - Ref: ${ref}` : ''}
+                        {` - ${apt.appointmentType}`}
+                      </span>
+                      <span>{formatCurrency(apt.cost)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="border-t pt-4 flex justify-between font-bold">
+                <span>TOTAL:</span>
+                <span>{formatCurrency(correctionReview.totalCost)}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-6">
+              Sending will email {correctionReview.consultant} an apology explaining her records were corrected,
+              with this updated invoice attached — BCC'd to you.
+            </p>
+
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setCorrectionReview(null)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2.5 rounded-lg transition"
+              >
+                Close Without Sending
+              </button>
+              <button
+                onClick={async () => {
+                  const inv = correctionReview;
+                  setCorrectionReview(null);
+                  await handleSendOutlookEmail(inv, true);
+                }}
+                disabled={sendingEmailFor === correctionReview.invoiceNumber}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-bold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5"
+              >
+                {sendingEmailFor === correctionReview.invoiceNumber ? 'Sending...' : '🚀 Send Corrected Invoice'}
               </button>
             </div>
           </div>
