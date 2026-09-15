@@ -459,6 +459,41 @@ Email: gabydeluca.nursing@outlook.com`;
         )}
       </div>
 
+      {/* Preview of pending appointments not yet invoiced for this month */}
+      {monthAppointments.length > 0 && (
+        <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
+          <h3 className="font-bold text-gray-900 text-lg">
+            Pending Appointments for {selectedMonth} (not yet invoiced)
+          </h3>
+          {Object.entries(appointmentsByConsultant).map(([consultant, records]) => {
+            const consultantTotal = records.reduce((sum, a) => sum + a.cost, 0);
+            return (
+              <div key={consultant} className="border rounded-lg overflow-hidden">
+                <div className="bg-gray-50 px-4 py-2 flex justify-between items-center">
+                  <span className="font-semibold text-gray-900 text-sm">{consultant}</span>
+                  <span className="text-sm font-bold text-indigo-700">{formatCurrency(consultantTotal)}</span>
+                </div>
+                <div className="divide-y">
+                  {records.map((apt, idx) => {
+                    const ref = apt.patientReference || apt.patientInitials;
+                    return (
+                      <div key={idx} className="flex justify-between px-4 py-2 text-sm">
+                        <span className="text-gray-700">
+                          {formatDate(apt.date)}
+                          {ref && ref !== 'N/A' ? ` • Ref: ${ref}` : ''}
+                          {` • ${apt.appointmentType}`}
+                        </span>
+                        <span className="font-semibold text-gray-900">{formatCurrency(apt.cost)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Summary */}
       {monthInvoices.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg p-6">
