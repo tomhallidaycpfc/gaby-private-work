@@ -33,6 +33,9 @@ export default function ConsolidatedInvoicing({
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null);
   const [confirmSendInvoice, setConfirmSendInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [correctingInvoice, setCorrectingInvoice] = useState<Invoice | null>(null);
+  const [correctionKeptIds, setCorrectionKeptIds] = useState<string[]>([]);
+  const [correctionSaving, setCorrectionSaving] = useState(false);
 
   // Get ALL uninvoiced appointments for the selected consultant across ANY month
   const uninvoicedApts = useMemo(() => {
@@ -249,13 +252,13 @@ export default function ConsolidatedInvoicing({
     doc.save(`Consolidated_Invoice_${invoice.invoiceNumber}.pdf`);
   }
 
-  async function handleSendOutlookEmail(invoice: Invoice) {
+  async function handleSendOutlookEmail(invoice: Invoice, isCorrection = false) {
     setSendingEmailFor(invoice.invoiceNumber);
     try {
       const response = await fetch('/api/invoices/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(invoice),
+        body: JSON.stringify({ ...invoice, isCorrection }),
       });
 
       const data = await response.json();
@@ -269,6 +272,65 @@ export default function ConsolidatedInvoicing({
       alert('Failed to send email via Outlook.');
     } finally {
       setSendingEmailFor(null);
+    }
+  }
+
+  function handleOpenCorrection(invoice: Invoice) {
+    setCorrectingInvoice(invoice);
+    setCorrectionKeptIds(invoice.appointments.map((a) => a.id!).filter(Boolean));
+  }
+
+  function handleToggleCorrectionApt(id: string) {
+    setCorrectionKeptIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  }
+
+  async function handleSaveCorrection() {
+    if (!correctingInvoice?.id) return;
+
+    const keptAppointments = correctingInvoice.appointments.filter(
+      (a) => a.id && correctionKeptIds.includes(a.id)
+    );
+
+    if (keptAppointments.length === correctingInvoice.appointments.length) {
+      alert('Please remove at least one appointment to correct this invoice.');
+      return;
+    }
+
+    if (keptAppointments.length === 0) {
+      alert('An invoice must retain at least one appointment. Use Delete Invoice instead if none should remain.');
+      return;
+    }
+
+    const removedCount = correctingInvoice.appointments.length - keptAppointments.length;
+    if (
+      !confirm(
+        `Remove ${removedCount} appointment(s) from invoice ${correctingInvoice.invoiceNumber}? The corrected invoice will be re-emailed to ${correctingInvoice.consultant} with an apology, BCC'd to you.`
+      )
+    ) {
+      return;
+    }
+
+    setCorrectionSaving(true);
+    try {
+      const response = await fetch(`/api/invoices/${correctingInvoice.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointments: keptAppointments }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to correct invoice');
+
+      setCorrectingInvoice(null);
+      onInvoiceGenerated();
+      await handleSendOutlookEmail(data as Invoice, true);
+    } catch (error) {
+      console.error('Error correcting invoice:', error);
+      alert('Error correcting invoice');
+    } finally {
+      setCorrectionSaving(false);
     }
   }
 
@@ -551,6 +613,13 @@ export default function ConsolidatedInvoicing({
                   {sendingEmailFor === inv.invoiceNumber ? 'Sending...' : '✉️ Send via Outlook'}
                 </button>
                 <button
+                  onClick={() => handleOpenCorrection(inv)}
+                  className="flex-1 min-w-[140px] bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-3 rounded-lg transition text-xs"
+                  title="Remove mistaken appointments and re-send a corrected invoice"
+                >
+                  ✏️ Correct Invoice
+                </button>
+                <button
                   onClick={() => handleDeleteInvoice(inv)}
                   className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 px-3 rounded-lg transition text-xs"
                   title="Delete Invoice"
@@ -675,6 +744,92 @@ export default function ConsolidatedInvoicing({
                 className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5"
               >
                 🚀 Confirm & Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Correct Invoice Modal */}
+      {correctingInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                ✏️ Correct Invoice {correctingInvoice.invoiceNumber}
+              </h3>
+              <button
+                onClick={() => setCorrectingInvoice(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              Untick any appointment(s) that were included by mistake. Saving will remove them from this invoice
+              (returning them to the unbilled pool), recalculate the total, and re-send the corrected invoice to{' '}
+              <strong>{correctingInvoice.consultant}</strong> with an apology — BCC'd to you.
+            </p>
+
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1 divide-y">
+              {correctingInvoice.appointments.map((apt) => {
+                const isKept = Boolean(apt.id && correctionKeptIds.includes(apt.id));
+                const ref = apt.patientReference || apt.patientInitials;
+                return (
+                  <label
+                    key={apt.id}
+                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition ${
+                      isKept ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200 opacity-70'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isKept}
+                        onChange={() => apt.id && handleToggleCorrectionApt(apt.id)}
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                      />
+                      <div>
+                        <span className="font-semibold text-sm text-gray-900">{formatDate(apt.date)}</span>
+                        <span className="text-xs text-gray-500 ml-2">
+                          {ref && ref !== 'N/A' ? `Ref: ${ref}` : ''}
+                        </span>
+                        <span className="text-xs text-gray-600 block">{apt.appointmentType}</span>
+                      </div>
+                    </div>
+                    <span className="font-bold text-sm text-indigo-700">{formatCurrency(apt.cost)}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex justify-between items-center">
+              <span className="text-xs font-semibold text-gray-700">
+                Keeping {correctionKeptIds.length} of {correctingInvoice.appointments.length} appointment(s)
+              </span>
+              <span className="text-lg font-bold text-indigo-700">
+                {formatCurrency(
+                  correctingInvoice.appointments
+                    .filter((a) => a.id && correctionKeptIds.includes(a.id))
+                    .reduce((sum, a) => sum + a.cost, 0)
+                )}
+              </span>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setCorrectingInvoice(null)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2.5 rounded-lg transition"
+              >
+                ❌ Cancel
+              </button>
+              <button
+                onClick={handleSaveCorrection}
+                disabled={correctionSaving}
+                className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-400 text-white font-bold py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5"
+              >
+                {correctionSaving ? 'Saving & Sending...' : '✅ Save & Re-send Corrected Invoice'}
               </button>
             </div>
           </div>

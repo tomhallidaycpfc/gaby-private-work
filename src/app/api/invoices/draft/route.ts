@@ -12,7 +12,9 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const invoice: Invoice = await request.json();
+    const { isCorrection, ...invoice } = (await request.json()) as Invoice & {
+      isCorrection?: boolean;
+    };
 
     const outlookEmail = process.env.OUTLOOK_EMAIL || 'gabydeluca.nursing@outlook.com';
     const outlookPassword = process.env.OUTLOOK_APP_PASSWORD;
@@ -34,11 +36,19 @@ export async function POST(request: NextRequest) {
       ? getInvoiceableHoursTotal(invoice.appointments)
       : undefined;
 
-    const bodyText = `Hi there,
+    const introText = isCorrection
+      ? `Hi there,
+
+I'm so sorry for the inconvenience - I found an error in my records affecting invoice ${invoice.invoiceNumber} for ${invoice.month}. I have corrected this, and this replaces the previous version I sent you. Please disregard the earlier invoice and only rely on the corrected details below.
+
+Please find attached my corrected PDF invoice ${invoice.invoiceNumber} for nursing services provided during ${invoice.month}.`
+      : `Hi there,
 
 I hope you're well!
 
-Please find attached my PDF invoice ${invoice.invoiceNumber} for nursing services provided during ${invoice.month}.
+Please find attached my PDF invoice ${invoice.invoiceNumber} for nursing services provided during ${invoice.month}.`;
+
+    const bodyText = `${introText}
 
 INVOICE SUMMARY:
 ───────────────────────────────────────
@@ -71,7 +81,9 @@ NMC Pin: 16I0383E
 Tel: 07713 031388
 Email: gabydeluca.nursing@outlook.com`;
 
-    const subjectText = `Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`;
+    const subjectText = isCorrection
+      ? `Corrected Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`
+      : `Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`;
 
     // Option A: Brevo REST API (Bypasses SMTP IP authorization restrictions)
     if (brevoApiKey) {
@@ -122,7 +134,7 @@ Email: gabydeluca.nursing@outlook.com`;
 
       return NextResponse.json({
         success: true,
-        message: `Invoice email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
+        message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
       });
     }
 
@@ -151,7 +163,7 @@ Email: gabydeluca.nursing@outlook.com`;
 
       return NextResponse.json({
         success: true,
-        message: `Invoice email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
+        message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
       });
     }
 
@@ -197,7 +209,7 @@ Email: gabydeluca.nursing@outlook.com`;
 
     return NextResponse.json({
       success: true,
-      message: `Invoice email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
+      message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
     });
   } catch (error: any) {
     console.error('Error sending email:', error);
