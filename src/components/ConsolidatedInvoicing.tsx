@@ -31,6 +31,7 @@ export default function ConsolidatedInvoicing({
   const [invoiceTitle, setInvoiceTitle] = useState('2026 Backlog Work');
   const [generating, setGenerating] = useState(false);
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null);
+  const [sendingChaserFor, setSendingChaserFor] = useState<string | null>(null);
   const [confirmSendInvoice, setConfirmSendInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [correctingInvoice, setCorrectingInvoice] = useState<Invoice | null>(null);
@@ -283,6 +284,33 @@ export default function ConsolidatedInvoicing({
       alert('Failed to send email via Outlook.');
     } finally {
       setSendingEmailFor(null);
+    }
+  }
+
+  async function handleSendChaser(invoice: Invoice) {
+    if (!confirm(`Send a polite payment reminder for invoice ${invoice.invoiceNumber} to ${invoice.consultant}, with the original PDF attached?`)) {
+      return;
+    }
+
+    setSendingChaserFor(invoice.invoiceNumber);
+    try {
+      const response = await fetch('/api/invoices/chaser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(invoice),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`✅ ${data.message}`);
+      } else {
+        alert(`⚠️ ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending payment reminder:', error);
+      alert('Failed to send payment reminder.');
+    } finally {
+      setSendingChaserFor(null);
     }
   }
 
@@ -662,6 +690,16 @@ export default function ConsolidatedInvoicing({
                 >
                   ✏️ Correct Invoice
                 </button>
+                {inv.status !== 'paid' && (
+                  <button
+                    onClick={() => handleSendChaser(inv)}
+                    disabled={sendingChaserFor === inv.invoiceNumber}
+                    className="flex-1 min-w-[160px] bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-xs"
+                    title="Send a polite payment reminder with the original invoice PDF attached"
+                  >
+                    {sendingChaserFor === inv.invoiceNumber ? 'Sending...' : '📨 Chase Payment'}
+                  </button>
+                )}
                 <button
                   onClick={() => handleDeleteInvoice(inv)}
                   className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 px-3 rounded-lg transition text-xs"

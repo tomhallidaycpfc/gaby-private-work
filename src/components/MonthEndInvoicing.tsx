@@ -33,6 +33,7 @@ export default function MonthEndInvoicing({
   const [confirmSendInvoice, setConfirmSendInvoice] = useState<Invoice | null>(null);
   const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null);
+  const [sendingChaserFor, setSendingChaserFor] = useState<string | null>(null);
 
   function downloadPDF(invoice: Invoice) {
     const doc = new jsPDF();
@@ -178,6 +179,33 @@ export default function MonthEndInvoicing({
       alert('Failed to send email via Outlook.');
     } finally {
       setSendingEmailFor(null);
+    }
+  }
+
+  async function handleSendChaser(invoice: Invoice) {
+    if (!confirm(`Send a polite payment reminder for invoice ${invoice.invoiceNumber} to ${invoice.consultant}, with the original PDF attached?`)) {
+      return;
+    }
+
+    setSendingChaserFor(invoice.invoiceNumber);
+    try {
+      const response = await fetch('/api/invoices/chaser', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(invoice),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`✅ ${data.message}`);
+      } else {
+        alert(`⚠️ ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending payment reminder:', error);
+      alert('Failed to send payment reminder.');
+    } finally {
+      setSendingChaserFor(null);
     }
   }
 
@@ -527,6 +555,16 @@ Email: gabydeluca.nursing@outlook.com`;
                 >
                   🔔 Payment Reminder
                 </button>
+                {invoice.status !== 'paid' && (
+                  <button
+                    onClick={() => handleSendChaser(invoice)}
+                    disabled={sendingChaserFor === invoice.invoiceNumber}
+                    className="flex-1 min-w-[160px] bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
+                    title="Send a polite payment reminder with the original invoice PDF attached"
+                  >
+                    {sendingChaserFor === invoice.invoiceNumber ? 'Sending...' : '📨 Chase Payment (w/ PDF)'}
+                  </button>
+                )}
                 <button
                   onClick={() => handleDeleteInvoice(invoice)}
                   className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 px-3 rounded-lg transition text-sm"

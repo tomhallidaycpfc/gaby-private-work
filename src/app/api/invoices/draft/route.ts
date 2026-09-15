@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
-import { Resend } from 'resend';
 import { Invoice } from '@/types';
 import { generateInvoicePDFBuffer } from '@/lib/pdf';
 import { supabase } from '@/lib/supabase';
+import { sendEmailWithAttachment } from '@/lib/email';
 import {
-  GABY_DETAILS,
   formatCurrency,
   formatDate,
   getInvoiceableHoursTotal,
@@ -21,11 +19,6 @@ export async function POST(request: NextRequest) {
     const { isCorrection, ...invoice } = (await request.json()) as Invoice & {
       isCorrection?: boolean;
     };
-
-    const outlookEmail = process.env.OUTLOOK_EMAIL || 'gabydeluca.nursing@outlook.com';
-    const outlookPassword = process.env.OUTLOOK_APP_PASSWORD;
-    const resendApiKey = process.env.RESEND_API_KEY;
-    const brevoApiKey = process.env.BREVO_API_KEY || process.env.BREVO_KEY;
 
     // 1. Generate PDF Buffer
     const pdfBuffer = generateInvoicePDFBuffer(invoice);
@@ -91,137 +84,20 @@ Email: gabydeluca.nursing@outlook.com`;
       ? `Corrected Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`
       : `Invoice ${invoice.invoiceNumber} - ${invoice.consultant} - Gabriella De Luca`;
 
-    // Option A: Brevo REST API (Bypasses SMTP IP authorization restrictions)
-    if (brevoApiKey) {
-      const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'api-key': brevoApiKey,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          sender: {
-            name: 'Gabriella De Luca',
-            email: outlookEmail,
-          },
-          to: [
-            {
-              email: invoice.consultantEmail,
-              name: invoice.consultant,
-            },
-          ],
-          replyTo: {
-            email: outlookEmail,
-            name: 'Gabriella De Luca',
-          },
-          bcc: [
-            {
-              email: outlookEmail,
-              name: 'Gabriella De Luca',
-            },
-          ],
-          subject: subjectText,
-          textContent: bodyText,
-          attachment: [
-            {
-              name: `Invoice_${invoice.invoiceNumber}.pdf`,
-              content: pdfBuffer.toString('base64'),
-            },
-          ],
-        }),
-      });
-
-      const brevoData = await brevoRes.json();
-
-      if (!brevoRes.ok) {
-        throw new Error(brevoData.message || brevoData.error || 'Brevo API Error');
-      }
-
-      await clearCorrectionFlag(invoice.id);
-
-      return NextResponse.json({
-        success: true,
-        message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
-      });
-    }
-
-    // Option B: Use Resend API
-    if (resendApiKey) {
-      const resend = new Resend(resendApiKey);
-
-      const { data, error: resendError } = await resend.emails.send({
-        from: 'Gabriella De Luca <onboarding@resend.dev>',
-        to: [invoice.consultantEmail],
-        bcc: [outlookEmail],
-        replyTo: 'gabydeluca.nursing@outlook.com',
-        subject: subjectText,
-        text: bodyText,
-        attachments: [
-          {
-            filename: `Invoice_${invoice.invoiceNumber}.pdf`,
-            content: pdfBuffer,
-          },
-        ],
-      });
-
-      if (resendError) {
-        throw new Error(resendError.message);
-      }
-
-      await clearCorrectionFlag(invoice.id);
-
-      return NextResponse.json({
-        success: true,
-        message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
-      });
-    }
-
-    // 4. Option B: Fallback to SMTP Nodemailer
-    if (!outlookPassword) {
-      return NextResponse.json(
-        {
-          error:
-            'OUTLOOK_APP_PASSWORD (or RESEND_API_KEY) is not configured in Vercel.',
-        },
-        { status: 400 }
-      );
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: 'smtp-mail.outlook.com',
-      port: 587,
-      secure: false, // TLS
-      auth: {
-        user: outlookEmail,
-        pass: outlookPassword,
-      },
-      tls: {
-        ciphers: 'SSLv3',
-        rejectUnauthorized: false,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `Gabriella De Luca <${outlookEmail}>`,
-      to: invoice.consultantEmail,
-      bcc: outlookEmail,
+    const result = await sendEmailWithAttachment({
+      toEmail: invoice.consultantEmail,
+      toName: invoice.consultant,
       subject: subjectText,
       text: bodyText,
-      attachments: [
-        {
-          filename: `Invoice_${invoice.invoiceNumber}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ],
+      attachmentBuffer: pdfBuffer,
+      attachmentFilename: `Invoice_${invoice.invoiceNumber}.pdf`,
     });
 
     await clearCorrectionFlag(invoice.id);
 
     return NextResponse.json({
       success: true,
-      message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment sent successfully to ${invoice.consultantEmail}!`,
+      message: `${isCorrection ? 'Corrected invoice' : 'Invoice'} email with PDF attachment ${result.message}`,
     });
   } catch (error: any) {
     console.error('Error sending email:', error);
