@@ -47,7 +47,6 @@ export function generateInvoicePDFBuffer(invoice: Invoice): Buffer {
   doc.setFont('helvetica', 'normal');
   doc.text(`Invoice No: ${invoice.invoiceNumber}`, 120, 62);
   doc.text(`Issue Date: ${formatDate(invoice.issueDate)}`, 120, 68);
-  doc.text(`Due Date: ${formatDate(invoice.dueDate)}`, 120, 74);
 
   // Table of Services
   const tableData = invoice.appointments.map((a) => {

@@ -13,13 +13,12 @@ export async function POST(request: NextRequest) {
 
     const bodyText = `Hi there,
 
-I hope you're keeping well! This is just a polite reminder regarding invoice ${invoice.invoiceNumber} for ${invoice.month}, issued on ${formatDate(invoice.issueDate)} with a due date of ${formatDate(invoice.dueDate)}, which appears to still be outstanding.
+I hope you're keeping well! This is just a polite reminder regarding invoice ${invoice.invoiceNumber} for ${invoice.month}, issued on ${formatDate(invoice.issueDate)}, which appears to still be outstanding.
 
 INVOICE SUMMARY:
 ───────────────────────────────────────
 Invoice Number: ${invoice.invoiceNumber}
 Issued: ${formatDate(invoice.issueDate)}
-Due Date: ${formatDate(invoice.dueDate)}
 Amount Outstanding: ${formatCurrency(invoice.totalCost)}
 ───────────────────────────────────────
 

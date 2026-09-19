@@ -69,7 +69,6 @@ export default function MonthEndInvoicing({
     doc.setFont('helvetica', 'normal');
     doc.text(`Invoice No: ${invoice.invoiceNumber}`, 120, 62);
     doc.text(`Issue Date: ${formatDate(invoice.issueDate)}`, 120, 68);
-    doc.text(`Due Date: ${formatDate(invoice.dueDate)}`, 120, 74);
 
     const tableData = invoice.appointments.map((a) => {
       const ref = a.patientReference || a.patientInitials;
@@ -316,7 +315,6 @@ INVOICE DETAILS
 
 Invoice Number: ${invoice.invoiceNumber}
 Issued: ${formatDate(invoice.issueDate)}
-Due Date: ${formatDate(invoice.dueDate)}
 
 ───────────────────────────────────────
 SERVICES PROVIDED
@@ -368,13 +366,12 @@ Email: ${GABY_DETAILS.workEmail}`;
 
 I hope you're well!
 
-This is a gentle reminder regarding invoice ${invoice.invoiceNumber} for services rendered in ${invoice.month}, which was issued on ${formatDate(invoice.issueDate)} and was due on ${formatDate(invoice.dueDate)}.
+This is a gentle reminder regarding invoice ${invoice.invoiceNumber} for services rendered in ${invoice.month}, which was issued on ${formatDate(invoice.issueDate)} and is still outstanding.
 
 INVOICE DETAILS:
 ───────────────────────────────────────
 Invoice Number: ${invoice.invoiceNumber}
 Amount Outstanding: ${formatCurrency(invoice.totalCost)}
-Due Date: ${formatDate(invoice.dueDate)}
 
 If payment has already been sent, please disregard this note. Otherwise, I would appreciate it if you could arrange payment at your earliest convenience to:
 

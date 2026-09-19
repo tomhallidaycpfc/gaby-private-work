@@ -53,7 +53,6 @@ INVOICE SUMMARY:
 ───────────────────────────────────────
 Invoice Number: ${invoice.invoiceNumber}
 Issued: ${formatDate(invoice.issueDate)}
-Due Date: ${formatDate(invoice.dueDate)}
 
 SERVICES PROVIDED:
 ${appointmentsList}

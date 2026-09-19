@@ -193,7 +193,6 @@ export default function ConsolidatedInvoicing({
     doc.text(`Invoice No: ${invoice.invoiceNumber}`, 120, 62);
     doc.text(`Period: ${invoice.month}`, 120, 68);
     doc.text(`Issue Date: ${formatDate(invoice.issueDate)}`, 120, 74);
-    doc.text(`Due Date: ${formatDate(invoice.dueDate)}`, 120, 80);
 
     const tableData = invoice.appointments.map((a) => {
       const ref = a.patientReference || a.patientInitials;
