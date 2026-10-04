@@ -93,6 +93,9 @@ Email: gabydeluca.nursing@outlook.com`;
     });
 
     await clearCorrectionFlag(invoice.id);
+    if (invoice.id) {
+      await supabase.from('invoices').update({ status: 'sent' }).eq('id', invoice.id).eq('status', 'draft');
+    }
 
     return NextResponse.json({
       success: true,

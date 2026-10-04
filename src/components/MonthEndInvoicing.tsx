@@ -170,6 +170,7 @@ export default function MonthEndInvoicing({
       const data = await response.json();
       if (response.ok) {
         alert(`✅ ${data.message}`);
+        onInvoiceGenerated();
       } else {
         alert(`⚠️ ${data.error}`);
       }
@@ -574,11 +575,13 @@ Email: gabydeluca.nursing@outlook.com`;
                 </button>
                 <button
                   onClick={() => setConfirmSendInvoice(invoice)}
-                  disabled={sendingEmailFor === invoice.invoiceNumber}
-                  className="flex-1 min-w-[160px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
+                  disabled={invoice.status !== 'draft' || sendingEmailFor === invoice.invoiceNumber}
+                  className="flex-1 min-w-[160px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-semibold py-2 px-3 rounded-lg transition text-sm"
                 >
                   {sendingEmailFor === invoice.invoiceNumber
                     ? 'Sending PDF...'
+                    : invoice.status !== 'draft'
+                    ? '✓ Sent via Outlook'
                     : '✉️ Send via Outlook (w/ PDF)'}
                 </button>
                 <button
@@ -587,7 +590,7 @@ Email: gabydeluca.nursing@outlook.com`;
                 >
                   🔔 Payment Reminder
                 </button>
-                {invoice.status !== 'paid' && (
+                {invoice.status === 'sent' && (
                   <button
                     onClick={() => handleSendChaser(invoice)}
                     disabled={sendingChaserFor === invoice.invoiceNumber}

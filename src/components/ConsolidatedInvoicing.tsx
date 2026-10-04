@@ -275,6 +275,7 @@ export default function ConsolidatedInvoicing({
       const data = await response.json();
       if (response.ok) {
         alert(`✅ ${data.message}`);
+        onInvoiceGenerated();
       } else {
         alert(`⚠️ ${data.error}`);
       }
@@ -671,8 +672,8 @@ export default function ConsolidatedInvoicing({
                     setSendAsCorrection(Boolean(inv.correctedAt));
                     setConfirmSendInvoice(inv);
                   }}
-                  disabled={sendingEmailFor === inv.invoiceNumber}
-                  className={`flex-1 min-w-[160px] disabled:bg-gray-400 text-white font-semibold py-2 px-3 rounded-lg transition text-xs ${
+                  disabled={(inv.status !== 'draft' && !inv.correctedAt) || sendingEmailFor === inv.invoiceNumber}
+                  className={`flex-1 min-w-[160px] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-semibold py-2 px-3 rounded-lg transition text-xs ${
                     inv.correctedAt ? 'bg-amber-600 hover:bg-amber-700' : 'bg-purple-600 hover:bg-purple-700'
                   }`}
                 >
@@ -680,6 +681,8 @@ export default function ConsolidatedInvoicing({
                     ? 'Sending...'
                     : inv.correctedAt
                     ? '📧 Send Corrected Invoice'
+                    : inv.status !== 'draft'
+                    ? '✓ Sent via Outlook'
                     : '✉️ Send via Outlook'}
                 </button>
                 <button
@@ -689,7 +692,7 @@ export default function ConsolidatedInvoicing({
                 >
                   ✏️ Correct Invoice
                 </button>
-                {inv.status !== 'paid' && (
+                {inv.status === 'sent' && !inv.correctedAt && (
                   <button
                     onClick={() => handleSendChaser(inv)}
                     disabled={sendingChaserFor === inv.invoiceNumber}
