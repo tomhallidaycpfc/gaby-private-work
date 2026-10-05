@@ -138,6 +138,7 @@ export default function Home() {
             {activeTab === 'history' && (
               <HistoricalRecords
                 appointments={appointments}
+                invoices={invoices}
                 onAppointmentDeleted={() => loadData()}
               />
             )}

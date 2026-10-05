@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Appointment } from '@/types';
+import { Appointment, Invoice } from '@/types';
 import { CONSULTANTS, formatCurrency, formatDate, getCurrentMonth } from '@/lib/utils';
 
 interface HistoricalRecordsProps {
   appointments: Appointment[];
+  invoices: Invoice[];
   onAppointmentDeleted: () => void;
 }
 
 export default function HistoricalRecords({
   appointments,
+  invoices,
   onAppointmentDeleted,
 }: HistoricalRecordsProps) {
   const [filterConsultant, setFilterConsultant] = useState('');
@@ -38,16 +40,31 @@ export default function HistoricalRecords({
     return groups;
   }, [filtered]);
 
-  // Calculate totals
+  // Appointment ids that belong to a paid invoice
+  const paidAppointmentIds = useMemo(() => {
+    const ids = new Set<string>();
+    invoices
+      .filter((i) => i.status === 'paid')
+      .forEach((i) => i.appointments.forEach((a) => a.id && ids.add(a.id)));
+    return ids;
+  }, [invoices]);
+
+  const isPaid = (a: Appointment) =>
+    Boolean(a.invoiced && a.id && paidAppointmentIds.has(a.id));
+
+  // Calculate totals: pending (not invoiced), invoiced (awaiting payment) and paid
   const totals = useMemo(() => {
     return filtered.reduce(
-      (acc, a) => ({
-        count: acc.count + 1,
-        total: acc.total + a.cost,
-      }),
-      { count: 0, total: 0 }
+      (acc, a) => {
+        const next = { ...acc, count: acc.count + 1, total: acc.total + a.cost };
+        if (!a.invoiced) next.pending += a.cost;
+        else if (a.id && paidAppointmentIds.has(a.id)) next.paid += a.cost;
+        else next.invoiced += a.cost;
+        return next;
+      },
+      { count: 0, total: 0, pending: 0, invoiced: 0, paid: 0 }
     );
-  }, [filtered]);
+  }, [filtered, paidAppointmentIds]);
 
   async function handleDelete(id: string | undefined) {
     if (!id || !confirm('Delete this appointment?')) return;
@@ -111,6 +128,20 @@ export default function HistoricalRecords({
           <div className="bg-green-50 rounded p-4">
             <p className="text-sm text-gray-600">Total Earnings</p>
             <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.total)}</p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-yellow-50 rounded p-4">
+            <p className="text-sm text-gray-600">Pending (not invoiced)</p>
+            <p className="text-xl font-bold text-yellow-700">{formatCurrency(totals.pending)}</p>
+          </div>
+          <div className="bg-orange-50 rounded p-4">
+            <p className="text-sm text-gray-600">Invoiced (awaiting payment)</p>
+            <p className="text-xl font-bold text-orange-700">{formatCurrency(totals.invoiced)}</p>
+          </div>
+          <div className="bg-emerald-50 rounded p-4">
+            <p className="text-sm text-gray-600">Paid</p>
+            <p className="text-xl font-bold text-emerald-700">{formatCurrency(totals.paid)}</p>
           </div>
         </div>
       </div>
@@ -206,15 +237,28 @@ export default function HistoricalRecords({
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                            appointment.invoiced
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {appointment.invoiced ? '✓ Invoiced' : 'Pending'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                              appointment.invoiced
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}
+                          >
+                            {appointment.invoiced ? '✓ Invoiced' : 'Pending'}
+                          </span>
+                          {appointment.invoiced && (
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                                isPaid(appointment)
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}
+                            >
+                              {isPaid(appointment) ? '✓ Paid' : 'Unpaid'}
+                            </span>
+                          )}
+                        </div>
 
                         {!appointment.invoiced && (
                           <button
